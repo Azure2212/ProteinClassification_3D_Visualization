@@ -1,0 +1,871 @@
+{
+  "source": "sourceCode/visuallization/ExactNSimilarity229ProteinImages_ourSmoothing.xlsx",
+  "note": "PDB Part 3 = EMDB_ExactNSimilarity 229 (Excel). 229 real test images, top-50 only. Model input: Resnet152 224x224, Swinv2b 256x256. Sheet3 = per-filter (no smoothing); Sheet2 = smoothing comparison (\u03b5=0.2).",
+  "topk": 50,
+  "total_images": 229,
+  "proteins": [
+    "7UZM",
+    "8DNM",
+    "8DNO",
+    "8DNP",
+    "8DNS",
+    "8DNU",
+    "8EM2",
+    "8EMS",
+    "8EMT",
+    "8ENE",
+    "8EOJ",
+    "8EOR"
+  ],
+  "protein_totals": {
+    "7UZM": 3,
+    "8DNM": 53,
+    "8DNO": 16,
+    "8DNP": 24,
+    "8DNS": 12,
+    "8DNU": 12,
+    "8EM2": 18,
+    "8EMS": 29,
+    "8EMT": 11,
+    "8ENE": 20,
+    "8EOJ": 16,
+    "8EOR": 15
+  },
+  "models": {
+    "Resnet152": {
+      "input": "224x224",
+      "columns": [
+        {
+          "key": "Sheet3:17",
+          "label": "filter=6",
+          "group": "no smoothing",
+          "sheet": "Sheet3",
+          "cells": {
+            "8DNM": {
+              "correct": 0,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 0,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 0,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 2,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 0,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 1,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 0,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 4,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 0,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 0,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 0,
+              "total": 3
+            }
+          },
+          "computed_correct": 7,
+          "computed_total": 229,
+          "stated": "6/229(2.6%)",
+          "stated_correct": 6,
+          "mismatch": true,
+          "recovered_cells": [
+            "8DNO",
+            "8EM2",
+            "8ENE"
+          ]
+        },
+        {
+          "key": "Sheet3:18",
+          "label": "filter=12",
+          "group": "no smoothing",
+          "sheet": "Sheet3",
+          "cells": {
+            "8DNM": {
+              "correct": 24,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 11,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 8,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 8,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 8,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 0,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 5,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 1,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 0,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 0,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 3,
+              "total": 3
+            }
+          },
+          "computed_correct": 68,
+          "computed_total": 229,
+          "stated": "68/229(29.7%)",
+          "stated_correct": 68,
+          "mismatch": false,
+          "recovered_cells": [
+            "8DNU",
+            "8DNP",
+            "8DNO",
+            "8DNS",
+            "8EMT",
+            "8ENE",
+            "7UZM"
+          ]
+        },
+        {
+          "key": "Sheet3:19",
+          "label": "filter=14",
+          "group": "no smoothing",
+          "sheet": "Sheet3",
+          "cells": {
+            "8DNM": {
+              "correct": 27,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 11,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 0,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 16,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 2,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 0,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 5,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 18,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 0,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 2,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 3,
+              "total": 3
+            }
+          },
+          "computed_correct": 84,
+          "computed_total": 229,
+          "stated": "80/229  (34.9%)",
+          "stated_correct": 80,
+          "mismatch": true,
+          "recovered_cells": [
+            "8DNU",
+            "8DNS",
+            "8EMT",
+            "8EOR",
+            "7UZM"
+          ]
+        },
+        {
+          "key": "Sheet2:17",
+          "label": "without smoothing",
+          "group": "smoothing (\u03b5=0.2)",
+          "sheet": "Sheet2",
+          "cells": {
+            "8DNM": {
+              "correct": 0,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 0,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 0,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 2,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 0,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 1,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 0,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 4,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 0,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 0,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 0,
+              "total": 3
+            }
+          },
+          "computed_correct": 7,
+          "computed_total": 229,
+          "stated": "6/229(2.6%)",
+          "stated_correct": 6,
+          "mismatch": true,
+          "recovered_cells": [
+            "8DNO",
+            "8EM2",
+            "8ENE"
+          ]
+        },
+        {
+          "key": "Sheet2:18",
+          "label": "hard smoothing",
+          "group": "smoothing (\u03b5=0.2)",
+          "sheet": "Sheet2",
+          "cells": {
+            "8DNM": {
+              "correct": 6,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 11,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 24,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 5,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 0,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 1,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 3,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 16,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 0,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 0,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 1,
+              "total": 3
+            }
+          },
+          "computed_correct": 67,
+          "computed_total": 229,
+          "stated": "67/229(29.3%)",
+          "stated_correct": 67,
+          "mismatch": false,
+          "recovered_cells": [
+            "8DNU",
+            "8DNO",
+            "8EM2",
+            "8EMT",
+            "7UZM"
+          ]
+        },
+        {
+          "key": "Sheet2:19",
+          "label": "our smoothing",
+          "group": "smoothing (\u03b5=0.2)",
+          "sheet": "Sheet2",
+          "cells": {
+            "8DNM": {
+              "correct": 5,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 10,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 24,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 5,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 0,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 1,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 0,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 10,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 0,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 3,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 0,
+              "total": 3
+            }
+          },
+          "computed_correct": 58,
+          "computed_total": 229,
+          "stated": "58/229(25.3%)",
+          "stated_correct": 58,
+          "mismatch": false,
+          "recovered_cells": [
+            "8DNU",
+            "8DNO",
+            "8EM2",
+            "8ENE",
+            "8EOR"
+          ]
+        }
+      ]
+    },
+    "Swinv2b": {
+      "input": "256x256",
+      "columns": [
+        {
+          "key": "Sheet3:26",
+          "label": "filter=6",
+          "group": "no smoothing",
+          "sheet": "Sheet3",
+          "cells": {
+            "8DNM": {
+              "correct": 30,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 12,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 24,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 15,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 1,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 1,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 2,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 15,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 0,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 1,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 2,
+              "total": 3
+            }
+          },
+          "computed_correct": 103,
+          "computed_total": 229,
+          "stated": "103/229 (44.98%)",
+          "stated_correct": 103,
+          "mismatch": false,
+          "recovered_cells": [
+            "8DNU",
+            "8DNS",
+            "8EM2",
+            "8EMT",
+            "8EOR",
+            "7UZM"
+          ]
+        },
+        {
+          "key": "Sheet3:27",
+          "label": "filter=12",
+          "group": "no smoothing",
+          "sheet": "Sheet3",
+          "cells": {
+            "8DNM": {
+              "correct": 32,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 11,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 24,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 12,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 2,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 2,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 1,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 8,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 8,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 3,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 3,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 3,
+              "total": 3
+            }
+          },
+          "computed_correct": 109,
+          "computed_total": 229,
+          "stated": "109/229  (47.6%)",
+          "stated_correct": 109,
+          "mismatch": false,
+          "recovered_cells": [
+            "8DNU",
+            "8DNO",
+            "8DNS",
+            "8EM2",
+            "8EMS",
+            "8EMT",
+            "8ENE",
+            "8EOJ",
+            "8EOR",
+            "7UZM"
+          ]
+        },
+        {
+          "key": "Sheet3:28",
+          "label": "filter=14",
+          "group": "no smoothing",
+          "sheet": "Sheet3",
+          "cells": {
+            "8DNM": {
+              "correct": 41,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 10,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 24,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 11,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 4,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 3,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 9,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 11,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 2,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 10,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 3,
+              "total": 3
+            }
+          },
+          "computed_correct": 128,
+          "computed_total": 229,
+          "stated": "128/229  (55.9%)",
+          "stated_correct": 128,
+          "mismatch": false,
+          "recovered_cells": [
+            "8DNU",
+            "8DNO",
+            "8DNS",
+            "8EM2",
+            "8EMT",
+            "8ENE",
+            "8EOJ",
+            "8EOR",
+            "7UZM"
+          ]
+        },
+        {
+          "key": "Sheet2:29",
+          "label": "without smoothing",
+          "group": "smoothing (\u03b5=0.2)",
+          "sheet": "Sheet2",
+          "cells": {
+            "8DNM": {
+              "correct": 30,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 12,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 24,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 15,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 1,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 1,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 2,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 15,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 0,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 1,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 2,
+              "total": 3
+            }
+          },
+          "computed_correct": 103,
+          "computed_total": 229,
+          "stated": "103/229 (44.98%)",
+          "stated_correct": 103,
+          "mismatch": false,
+          "recovered_cells": [
+            "8DNU",
+            "8DNS",
+            "8EM2",
+            "8EMT",
+            "8EOR",
+            "7UZM"
+          ]
+        },
+        {
+          "key": "Sheet2:30",
+          "label": "hard smoothing",
+          "group": "smoothing (\u03b5=0.2)",
+          "sheet": "Sheet2",
+          "cells": {
+            "8DNM": {
+              "correct": 45,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 9,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 24,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 16,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 2,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 1,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 1,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 20,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 0,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 5,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 1,
+              "total": 3
+            }
+          },
+          "computed_correct": 124,
+          "computed_total": 229,
+          "stated": "124/229(54.1%)",
+          "stated_correct": 124,
+          "mismatch": false,
+          "recovered_cells": [
+            "8DNU",
+            "8DNS",
+            "8EM2",
+            "8EMT",
+            "8EOR",
+            "7UZM"
+          ]
+        },
+        {
+          "key": "Sheet2:31",
+          "label": "our smoothing",
+          "group": "smoothing (\u03b5=0.2)",
+          "sheet": "Sheet2",
+          "cells": {
+            "8DNM": {
+              "correct": 21,
+              "total": 53
+            },
+            "8DNU": {
+              "correct": 9,
+              "total": 12
+            },
+            "8DNP": {
+              "correct": 24,
+              "total": 24
+            },
+            "8DNO": {
+              "correct": 5,
+              "total": 16
+            },
+            "8DNS": {
+              "correct": 0,
+              "total": 12
+            },
+            "8EM2": {
+              "correct": 1,
+              "total": 18
+            },
+            "8EMS": {
+              "correct": 0,
+              "total": 29
+            },
+            "8EMT": {
+              "correct": 0,
+              "total": 11
+            },
+            "8ENE": {
+              "correct": 15,
+              "total": 20
+            },
+            "8EOJ": {
+              "correct": 0,
+              "total": 16
+            },
+            "8EOR": {
+              "correct": 6,
+              "total": 15
+            },
+            "7UZM": {
+              "correct": 0,
+              "total": 3
+            }
+          },
+          "computed_correct": 81,
+          "computed_total": 229,
+          "stated": "81/229(35.4%)",
+          "stated_correct": 81,
+          "mismatch": false,
+          "recovered_cells": [
+            "8DNU",
+            "8DNO",
+            "8EM2",
+            "8EOR"
+          ]
+        }
+      ]
+    }
+  }
+}

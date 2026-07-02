@@ -147,6 +147,12 @@ def api_run_curves(run):
 def api_part3():
     dataset = request.args.get("dataset", "MAP")
     model = request.args.get("model", "")
+    # PDB: sourced from the professor's Excel (top-50 only, k ignored).
+    if dataset == "PDB":
+        table = results.pdb_part3_table(model)
+        if not table:
+            return jsonify({"error": f"no PDB Excel data for model {model!r}"}), 404
+        return jsonify(table)
     try:
         k = int(request.args.get("k", "50"))
     except ValueError:
@@ -158,7 +164,11 @@ def api_part3():
 
 @app.route("/api/models")
 def api_models():
-    """Distinct models available in trained_results, per dataset."""
+    """Distinct models available per dataset.
+
+    MAP models come from trained_results configs; PDB models come from the baked
+    Excel data (Part 3 for PDB is Excel-sourced, not eval-sourced).
+    """
     out = {}
     for run in results.list_runs():
         m = results.run_meta(run)
@@ -166,7 +176,11 @@ def api_models():
         if not ds or not model:
             continue
         out.setdefault(ds, set()).add(model)
-    return jsonify({k: sorted(v) for k, v in out.items()})
+    out = {k: sorted(v) for k, v in out.items()}
+    pdb = results.pdb_models()
+    if pdb:
+        out["PDB"] = pdb
+    return jsonify(out)
 
 
 if __name__ == "__main__":

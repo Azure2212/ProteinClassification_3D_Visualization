@@ -14,6 +14,69 @@ import config
 # top-k columns present in ExactNSimilarityCheckResult.csv
 EXACT_KS = [1, 3, 5, 10, 20, 50]
 
+# Baked PDB Part-3 data (parsed offline from the professor's Excel by
+# gen_pdb_part3.py). MAP still comes from the live trained_results CSVs.
+_PDB_PART3_PATH = os.path.join(os.path.dirname(__file__), "data", "pdb_part3.json")
+
+
+@functools.lru_cache(maxsize=1)
+def pdb_part3_data():
+    """Load the baked EMDB_ExactNSimilarity-229 Excel data (or {} if absent)."""
+    if not os.path.isfile(_PDB_PART3_PATH):
+        return {}
+    try:
+        with open(_PDB_PART3_PATH) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def pdb_models():
+    """Model names available in the baked PDB Excel data."""
+    return sorted(pdb_part3_data().get("models", {}).keys())
+
+
+def pdb_part3_table(model):
+    """Part 3 table for one PDB model, sourced from the Excel JSON.
+
+    Shape differs from the MAP table: columns are Excel variants (per-filter and
+    smoothing-comparison), top-k is fixed at 50, and each column carries a
+    source-mismatch flag. Returns {} if the model is unknown.
+    """
+    data = pdb_part3_data()
+    mv = data.get("models", {}).get(model)
+    if not mv:
+        return {}
+    proteins = data["proteins"]
+    columns = []
+    for c in mv["columns"]:
+        columns.append({
+            "run": f"{model} · {c['group']} · {c['label']}",
+            "label": c["label"],
+            "group": c["group"],
+            "sheet": c["sheet"],
+            "filter": c["label"],
+            "smoothing": c["group"],
+            "cells": {p: c["cells"].get(p) for p in proteins},
+            "total_correct": c["computed_correct"],
+            "total_images": c["computed_total"],
+            "stated": c["stated"],
+            "stated_correct": c["stated_correct"],
+            "mismatch": c["mismatch"],
+            "recovered_cells": c.get("recovered_cells", []),
+        })
+    return {
+        "source": "excel",
+        "k": data.get("topk", 50),
+        "note": data.get("note"),
+        "source_file": data.get("source"),
+        "input": mv.get("input"),
+        "total_images": data.get("total_images"),
+        "proteins": proteins,
+        "protein_totals": data.get("protein_totals", {}),
+        "columns": columns,
+    }
+
 
 def _run_path(run, *parts):
     base = os.path.realpath(config.TRAINED_RESULTS_DIR)
