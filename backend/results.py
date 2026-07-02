@@ -258,26 +258,44 @@ def map_runs():
     return out
 
 
-# --- Part 4: pipeline scripts (read-only) ------------------------------------
+# --- Part 4: scripts (read-only) ---------------------------------------------
+
+def _script_dir(dir_key):
+    return config.SCRIPT_DIRS.get(dir_key or "eman2")
+
+
+def _annotate(spec):
+    """Add availability flag (existence of the real file) to a script spec."""
+    base = _script_dir(spec.get("dir", "eman2"))
+    ok = bool(base) and os.path.isfile(os.path.join(base, spec["file"]))
+    return {**spec, "available": ok}
+
 
 def list_scripts():
-    """Pipeline steps with availability flag (existence of the real file)."""
-    out = []
-    for spec in config.PIPELINE_SCRIPTS:
-        path = os.path.join(config.EMAN2_LIBRARY_DIR, spec["file"])
-        out.append({**spec, "available": os.path.isfile(path)})
-    return out
+    """Pipeline steps, each with availability flag."""
+    return [_annotate(s) for s in config.PIPELINE_SCRIPTS]
 
 
-def read_script(name):
-    """Return the real content of a whitelisted pipeline script, or None.
+def list_additional_scripts():
+    """Additional scripts (below the pipeline), each with availability flag."""
+    return [_annotate(s) for s in config.ADDITIONAL_SCRIPTS]
 
-    Only filenames registered in PIPELINE_SCRIPTS are readable (no traversal).
+
+def read_script(name, dir_key="eman2"):
+    """Return the real content of a whitelisted script, or None.
+
+    Only exact (dir, filename) pairs registered in PIPELINE_SCRIPTS /
+    ADDITIONAL_SCRIPTS are readable, and the resolved path must stay inside the
+    registered base dir (no traversal).
     """
-    allowed = {s["file"] for s in config.PIPELINE_SCRIPTS}
-    if name not in allowed:
+    allowed = {(s.get("dir", "eman2"), s["file"])
+               for s in config.PIPELINE_SCRIPTS + config.ADDITIONAL_SCRIPTS}
+    if (dir_key, name) not in allowed:
         return None
-    base = os.path.realpath(config.EMAN2_LIBRARY_DIR)
+    base_dir = _script_dir(dir_key)
+    if not base_dir:
+        return None
+    base = os.path.realpath(base_dir)
     path = os.path.realpath(os.path.join(base, name))
     if path != base and not path.startswith(base + os.sep):
         return None

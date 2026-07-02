@@ -26,7 +26,8 @@ export const api = {
   part3: (dataset, model, k, metric = "exact") =>
     getJSON(`/api/part3?dataset=${dataset}&model=${encodeURIComponent(model)}&k=${k}&metric=${metric}`),
   scripts: () => getJSON("/api/scripts"),
-  script: (name) => getJSON(`/api/script?name=${encodeURIComponent(name)}`),
+  script: (name, dir = "eman2") =>
+    getJSON(`/api/script?name=${encodeURIComponent(name)}&dir=${encodeURIComponent(dir)}`),
   testsetImages: (protein, version = "origin") =>
     getJSON(`/api/testset_images?protein=${encodeURIComponent(protein)}&version=${version}`),
   predictRuns: () => getJSON("/api/predict_runs"),

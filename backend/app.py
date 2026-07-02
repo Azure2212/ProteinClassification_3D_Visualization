@@ -192,21 +192,24 @@ def api_models():
 # --- Part 4: pipeline scripts (read-only) ------------------------------------
 @app.route("/api/scripts")
 def api_scripts():
-    """List the .pdb -> .mrc -> .hdf -> .png pipeline steps + script files."""
+    """Pipeline steps + "Additional" scripts (real files, read-only)."""
     return jsonify({
         "library": config.EMAN2_LIBRARY_DIR,
+        "dirs": config.SCRIPT_DIRS,
         "steps": results.list_scripts(),
+        "additional": results.list_additional_scripts(),
     })
 
 
 @app.route("/api/script")
 def api_script():
-    """Return the real content of one whitelisted pipeline script."""
+    """Return the real content of one whitelisted script (by dir + name)."""
     name = request.args.get("name", "")
-    content = results.read_script(name)
+    dir_key = request.args.get("dir", "eman2")
+    content = results.read_script(name, dir_key)
     if content is None:
         return jsonify({"error": f"script not available: {name}"}), 404
-    return jsonify({"name": name, "content": content})
+    return jsonify({"name": name, "dir": dir_key, "content": content})
 
 
 # --- Part 5: prediction ------------------------------------------------------

@@ -183,6 +183,9 @@ small.warn { color: #fbbf24; font-weight: 600; }
 .scripts-intro p { margin: 0; color: var(--muted); line-height: 1.6; }
 .scripts-intro code { background: var(--panel2); padding: 1px 6px; border-radius: 4px; color: var(--text); }
 .scripts-steps { display: flex; flex-direction: column; gap: 16px; }
+.scripts-additional-head { margin: 22px 2px 12px; border-top: 1px solid var(--line); padding-top: 16px; }
+.scripts-additional-head h2 { margin: 0 0 4px; font-size: 18px; color: var(--accent-dark); }
+.scripts-additional-head p { margin: 0; color: var(--muted); font-size: 13px; }
 .script-step { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
 .script-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--panel2); border-bottom: 1px solid var(--line); }
 .step-badge { background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }

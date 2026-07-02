@@ -34,26 +34,82 @@ PREDICT_MODULE_DIR = os.environ.get(
     os.path.join(PROJECT_ROOT, "sourceCode", "visuallization"),
 )
 
+# Read-only base dirs the /api/script endpoint may read from (keyed).
+SCRIPT_DIRS = {
+    "eman2": EMAN2_LIBRARY_DIR,
+    "viz": PREDICT_MODULE_DIR,   # sourceCode/visuallization
+}
+
 # Image-generation pipeline (.pdb -> .mrc -> .hdf -> .png). Each step points at a
-# real script under EMAN2_LIBRARY_DIR; content is served read-only by /api/script.
+# real script under a SCRIPT_DIRS base; content served read-only by /api/script.
 PIPELINE_SCRIPTS = [
     {
         "step": ".pdb → .mrc",
+        "dir": "eman2",
         "file": "pdb2mrcScript.py",
         "desc": "Convert an atomic PDB structure into a 3D density map (.mrc) at a "
                 "chosen resolution, using EMAN2 e2pdb2mrc.py (--res, --center).",
     },
     {
         "step": ".mrc → .hdf",
+        "dir": "eman2",
         "file": "mrc2hdfScript.py",
         "desc": "Generate 2D projections of the .mrc volume over many orientations "
                 "into an .hdf stack, using EMAN2 e2project3d.py (orientgen/sym).",
     },
     {
         "step": ".hdf → .png",
+        "dir": "eman2",
         "file": "hdf2png.py",
         "desc": "Read the .hdf projection stack and export each projection as an "
                 "8-bit grayscale PNG frame (000.png, 001.png, …).",
+    },
+]
+
+# "Additional" scripts shown below the pipeline on the Scripts page (real code,
+# read-only). Each has a base dir key + filename (verified to exist on disk).
+ADDITIONAL_SCRIPTS = [
+    {
+        "title": "Apply filter (Gaussian lowpass)",
+        "dir": "eman2",
+        "file": "map2pngScript.py",
+        "desc": "For .map inputs there is no pdb2mrc --res step, so resolution is "
+                "applied per projection as a Gaussian lowpass: "
+                "filter.lowpass.gauss:cutoff_freq = 1/<filter> (filter=1 = raw map, "
+                "baseline). \"filter N\" = the Gaussian smoothing level.",
+    },
+    {
+        "title": "Apply frame-fill normalization",
+        "dir": "eman2",
+        "file": "_render_filter12_anorm.py",
+        "desc": "Frame-fill normalization: scipy.ndimage.zoom rescales each view so "
+                "the largest-diameter view fills TARGET_FILL = 0.40 of the frame "
+                "(other views stay proportionally smaller). Does NOT read apix.",
+    },
+    {
+        "title": "Apply Å (true angstrom) via e2proc3d",
+        "dir": "eman2",
+        "file": "_render_filter12_trueA_native.py",
+        "desc": "True-Å recipe: e2proc3d resamples each map to a common apix with "
+                "math.fft.resample:n=APIX_OUT/native_apix, plus xform.centerofmass "
+                "and a fixed clip box — so a physical Å scale is preserved.",
+    },
+    {
+        "title": "Neighbor JSON (≥ identity threshold per protein)",
+        "dir": "viz",
+        "file": "SequentialSimilarityEachProtein1_n.py",
+        "desc": "Builds protein_neighbors_*.json: fetches FASTA per PDB id and, with "
+                "Bio.Align pairwise identity, records each protein's neighbors above "
+                "a percent-identity threshold (the ≥30% neighbor set used by the "
+                "similarity metric / loss).",
+    },
+    {
+        "title": "Apix (Å) data API",
+        "dir": "eman2",
+        "file": "get_apix_all_4885.py",
+        "desc": "Resolves the pixel spacing (apix, Å) for every protein: RCSB entry "
+                "-> EMD id, then EMDB map API -> pixel_spacing.x. Source of the "
+                "native apix used by the true-Å rendering.",
     },
 ]
 
