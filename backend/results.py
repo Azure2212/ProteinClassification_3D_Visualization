@@ -99,6 +99,19 @@ def _run_path(run, *parts):
     return target
 
 
+# Superseded runs hidden from the UI by exact name. These three swinv2b runs
+# scored ~0 (filter1 0.5%, filter6/14 0.0%) and were re-run with the SAME config
+# on 17062026 giving the real results (72.0 / 69.4 / 71.5%). Their configs.json
+# carry isDebug=0 so they are not caught by the debug filter; the user confirmed
+# they are leftover/superseded, so hide them here. Exact names only (never a
+# prefix) so the 16062026 filter12_*Smoothing runs are NOT affected. Kept on disk.
+SUPERSEDED_RUNS = frozenset({
+    "16062026_train_swinv2b_126_30_MAP_filter1",
+    "16062026_train_swinv2b_126_30_MAP_filter6",
+    "16062026_train_swinv2b_126_30_MAP_filter14",
+})
+
+
 def _is_scratch_run(name):
     """Demo/test scaffolding folders to hide from the UI (not real experiments).
 
@@ -131,6 +144,7 @@ def list_runs():
     return sorted(
         n for n in os.listdir(base)
         if os.path.isdir(os.path.join(base, n))
+        and n not in SUPERSEDED_RUNS
         and not _is_scratch_run(n)
         and not _is_debug_run(n)
     )
