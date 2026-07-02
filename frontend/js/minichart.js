@@ -132,14 +132,15 @@ export function barChart(container, {
     const color = barColor(b);
     svg += `<rect x="${x - bw / 2}" y="${y}" width="${bw}" height="${Math.max(0, h)}" `
       + `rx="1.5" fill="${color}"><title>${esc(b.label)}: ${b.value}%</title></rect>`;
-    // value above bar (only where tall enough to avoid clutter), coloured to match
+    // value above bar (only where tall enough to avoid clutter), coloured to match.
+    // Use inline `style` (not the fill attribute) so it beats the stylesheet.
     if (b.value >= 0.5) {
       svg += `<text x="${x}" y="${y - 3}" text-anchor="middle" class="bar-val" `
-        + `fill="${color}" stroke="#fff" stroke-width="2.4" paint-order="stroke">${b.value}</text>`;
+        + `style="fill:${color}" stroke="#fff" stroke-width="2.4" paint-order="stroke">${b.value}</text>`;
     }
     // rotated label under the axis, coloured to match the bar
     svg += `<text x="${x}" y="${m.top + ph + 12}" text-anchor="end" class="bar-lab" `
-      + `fill="${color}" transform="rotate(-55 ${x} ${m.top + ph + 12})">`
+      + `style="fill:${color}" transform="rotate(-55 ${x} ${m.top + ph + 12})">`
       + `${esc(b.label)}</text>`;
   });
 

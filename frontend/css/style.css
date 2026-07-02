@@ -188,8 +188,8 @@ small.warn { color: #fbbf24; font-weight: 600; }
 /* Part 5 — Prediction */
 .bar-svg { width: 100%; height: auto; }
 .bar-val { font-size: 8.5px; font-weight: 700; }
-.bar-lab { fill: var(--muted); font-size: 9px; }
-.bar-lab.hl { fill: var(--danger); font-weight: 700; }
+/* fill is set inline per-bar (style="fill:…") so it matches the bar colour */
+.bar-lab { font-size: 9px; font-weight: 600; }
 .p5-layout { display: flex; flex-direction: column; gap: 14px; }
 .p5-block { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; box-shadow: var(--shadow); }
 .p5-block-title { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 2px 8px; }
