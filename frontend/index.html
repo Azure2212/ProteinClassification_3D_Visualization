@@ -94,6 +94,12 @@
     <div class="controls">
       <div class="ctrl-group"><label>Dataset</label><select id="p3-dataset"></select></div>
       <div class="ctrl-group"><label>Model</label><select id="p3-model"></select></div>
+      <div class="ctrl-group"><label>Metric</label>
+        <select id="p3-metric-sel">
+          <option value="exact" selected>Exact prediction</option>
+          <option value="similarity">Sequential similarity</option>
+        </select>
+      </div>
       <div class="ctrl-group"><label>Top-k</label>
         <select id="p3-k">
           <option>1</option><option>3</option><option>5</option>

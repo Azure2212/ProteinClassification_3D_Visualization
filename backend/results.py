@@ -347,12 +347,22 @@ def real_test_tracking(run):
 
 # --- Part 3 table ------------------------------------------------------------
 
-def per_protein_counts(run, k):
-    """For each real protein: (#exact_predictTopK True, total images)."""
+# Per-image metric column groups in ExactNSimilarityCheckResult.csv.
+METRIC_FIELDS = {
+    "exact": "exact_predictTop",        # true class is within the model's Top-k
+    "similarity": "countSimilarityTop",  # a Top-k prediction is a >=30% id neighbor
+}
+
+
+def per_protein_counts(run, k, metric="exact"):
+    """For each protein: (#True for the chosen metric's TopK column, total images).
+
+    metric: 'exact' -> exact_predictTop{k}, 'similarity' -> countSimilarityTop{k}.
+    """
     rows = _read_exactn(run)
     if not rows:
         return {}
-    field = f"exact_predictTop{k}"
+    field = f"{METRIC_FIELDS.get(metric, METRIC_FIELDS['exact'])}{k}"
     agg = {}
     for r in rows:
         # image column like "8DNM/1.png" -> protein prefix; protein col also present
@@ -365,10 +375,11 @@ def per_protein_counts(run, k):
     return agg
 
 
-def part3_table(dataset, model, k=50):
+def part3_table(dataset, model, k=50, metric="exact"):
     """Protein (rows) x filter/run (cols) table of correct/total.
 
     Column = each matching run (labelled by filter + smoothing).
+    metric selects the CSV column group (exact prediction vs similarity).
     """
     runs = []
     for run in list_runs():
@@ -377,7 +388,7 @@ def part3_table(dataset, model, k=50):
             continue
         if model and (meta["model"] or "").lower() != model.lower():
             continue
-        counts = per_protein_counts(run, k)
+        counts = per_protein_counts(run, k, metric)
         if not counts:
             continue
         label = meta["filter"] or "?"
@@ -415,4 +426,4 @@ def part3_table(dataset, model, k=50):
     # order columns by numeric filter value ascending (filter1 < filter6 < filter12…),
     # then by smoothing/run so same-filter variants stay grouped deterministically
     columns.sort(key=lambda c: (_filter_num(c["filter"]), c["smoothing"] or "", c["run"]))
-    return {"k": k, "proteins": proteins, "columns": columns}
+    return {"k": k, "metric": metric, "proteins": proteins, "columns": columns}

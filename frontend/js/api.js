@@ -23,8 +23,8 @@ export const api = {
   runs: () => getJSON("/api/runs"),
   runConfig: (run) => getJSON(`/api/run/${encodeURIComponent(run)}/config`),
   runCurves: (run) => getJSON(`/api/run/${encodeURIComponent(run)}/curves`),
-  part3: (dataset, model, k) =>
-    getJSON(`/api/part3?dataset=${dataset}&model=${encodeURIComponent(model)}&k=${k}`),
+  part3: (dataset, model, k, metric = "exact") =>
+    getJSON(`/api/part3?dataset=${dataset}&model=${encodeURIComponent(model)}&k=${k}&metric=${metric}`),
   scripts: () => getJSON("/api/scripts"),
   script: (name) => getJSON(`/api/script?name=${encodeURIComponent(name)}`),
 };

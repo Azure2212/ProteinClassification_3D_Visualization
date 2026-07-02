@@ -21,6 +21,7 @@ async function init() {
   dsSel.addEventListener("change", refreshModels);
   $("#p3-model").addEventListener("change", load);
   $("#p3-k").addEventListener("change", load);
+  $("#p3-metric-sel").addEventListener("change", load);
   refreshModels();
 }
 
@@ -29,15 +30,18 @@ function refreshModels() {
   const mSel = $("#p3-model");
   mSel.innerHTML = "";
   (MODELS[ds] || []).forEach((m) => mSel.appendChild(opt(m)));
-  // PDB Excel data is top-50 only -> lock the top-k control.
+  // PDB Excel data is top-50 only + single (similarity-check) source ->
+  // lock the top-k and metric controls; MAP keeps both live.
   const kSel = $("#p3-k");
+  const mtSel = $("#p3-metric-sel");
   if (ds === "PDB") {
-    kSel.value = "50";
-    kSel.disabled = true;
+    kSel.value = "50"; kSel.disabled = true;
     kSel.title = "PDB Excel data is top-50 only";
+    mtSel.disabled = true;
+    mtSel.title = "PDB = professor's Excel similarity-check (top-50); metric toggle applies to MAP only";
   } else {
-    kSel.disabled = false;
-    kSel.title = "";
+    kSel.disabled = false; kSel.title = "";
+    mtSel.disabled = false; mtSel.title = "";
   }
   load();
 }
@@ -83,12 +87,13 @@ async function load() {
   const ds = $("#p3-dataset").value;
   const model = $("#p3-model").value;
   const k = $("#p3-k").value;
+  const metric = $("#p3-metric-sel").value;
   if (!model) return;
   const wrap = $("#p3-table-wrap");
   wrap.innerHTML = `<div class="loading">loading…</div>`;
   let data;
   try {
-    data = await api.part3(ds, model, k);
+    data = await api.part3(ds, model, k, metric);
   } catch (e) {
     wrap.innerHTML = `<div class="err">${e.message}</div>`;
     return;
@@ -127,32 +132,41 @@ async function load() {
   // Big metric banner (what the table shows) + caption + note under the table.
   const banner = $("#p3-metric");
   const note = $("#p3-note");
+  const isSim = metric === "similarity";
+  const metricName = isSim ? "Sequential similarity" : "Exact prediction";
+  const metricCol = isSim ? `countSimilarityTop${k}` : `exact_predictTop${k}`;
+  const metricDef = isSim
+    ? `a Top-<b>${k}</b> prediction is a ≥30%-identity sequence neighbor of the true class`
+    : `the true class appears in the model’s Top-<b>${k}</b> predictions`;
+
   if (data.source === "excel") {
     banner.innerHTML =
-      `📊 Metric: <b>Exact prediction</b> — Top-${data.k} accuracy per protein` +
-      `<span class="metric-sub">(from the professor's Excel “similarity check” sheets — top-50 only)</span>`;
+      `📊 Metric: <b>Sequential similarity</b> — Top-${data.k} per protein` +
+      `<span class="metric-sub">PDB source = professor's Excel “similarity check” (top-50 only); ` +
+      `the Exact/Similarity toggle applies to MAP only.</span>`;
     $("#p3-caption").innerHTML =
       `<b>PDB · ${model}</b> · input ${data.input} · cell = correct/total images ` +
       `per protein (${data.total_images} total)` +
       `<br><small class="src">source: ${data.note}</small>`;
     note.innerHTML =
-      `<b>How to read:</b> each cell = <b>correct / total</b> images for that protein, where “correct” ` +
-      `means the true class appears in the model’s <b>Top-${data.k}</b> predictions (Exact prediction). ` +
-      `This table does <b>not</b> show the Sequential-similarity metric (a hit when a top-k prediction is a ` +
-      `similarity-neighbor of the true class) — that is the second chart in <b>Training Runs</b>. ` +
+      `<b>How to read:</b> each cell = <b>correct / total</b> images for that protein, from the professor’s ` +
+      `Excel <b>similarity check</b> (top-50). PDB has no separate Exact-prediction export here, so the metric ` +
+      `selector does not change these numbers. ` +
       `⚠ marks a column whose recovered per-cell sum differs from the Excel’s stated total (source typo; shown, not corrected).`;
   } else {
     banner.innerHTML =
-      `📊 Metric: <b>Exact prediction</b> — Top-${k} accuracy per protein`;
+      `📊 Metric: <b>${metricName}</b> — Top-${k} per protein` +
+      (isSim
+        ? `<span class="metric-sub">a hit = a top-k prediction is a ≥30%-identity neighbor of the true class</span>`
+        : `<span class="metric-sub">a hit = the true class is within the model’s top-k predictions</span>`);
     $("#p3-caption").innerHTML =
-      `<b>MAP · ${model}</b> · exact Top-${k} · cell = correct/total images per protein ` +
+      `<b>MAP · ${model}</b> · ${metricName} · Top-${k} · cell = correct/total images per protein ` +
       `· source: eval trained_results (v2_193)`;
     note.innerHTML =
-      `<b>How to read:</b> each cell = <b>correct / total</b> images for that protein, computed live from ` +
-      `each run’s <code>ExactNSimilarityCheckResult.csv</code> using the <code>exact_predictTop${k}</code> ` +
-      `column — i.e. the true class is within the model’s <b>Top-${k}</b> predictions (Exact prediction). ` +
-      `The <b>Sequential-similarity</b> metric (<code>countSimilarityTop${k}</code>) is shown separately as the ` +
-      `second chart in <b>Training Runs</b>, not here.`;
+      `<b>How to read:</b> each cell = <b>correct / total</b> images for that protein, computed live from each run’s ` +
+      `<code>ExactNSimilarityCheckResult.csv</code> using the <code>${metricCol}</code> column — i.e. ${metricDef}. ` +
+      `Switch <b>Metric</b> above to compare <b>Exact prediction</b> (<code>exact_predictTop${k}</code>) vs ` +
+      `<b>Sequential similarity</b> (<code>countSimilarityTop${k}</code>).`;
   }
 }
 

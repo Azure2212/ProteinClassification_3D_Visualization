@@ -147,7 +147,11 @@ def api_run_curves(run):
 def api_part3():
     dataset = request.args.get("dataset", "MAP")
     model = request.args.get("model", "")
-    # PDB: sourced from the professor's Excel (top-50 only, k ignored).
+    metric = request.args.get("metric", "exact")
+    if metric not in results.METRIC_FIELDS:
+        metric = "exact"
+    # PDB: sourced from the professor's Excel (similarity-check, top-50 only).
+    # The metric toggle applies to MAP only; PDB returns its single Excel source.
     if dataset == "PDB":
         table = results.pdb_part3_table(model)
         if not table:
@@ -159,7 +163,7 @@ def api_part3():
         k = 50
     if k not in results.EXACT_KS:
         return jsonify({"error": f"k must be one of {results.EXACT_KS}"}), 400
-    return jsonify(results.part3_table(dataset, model, k))
+    return jsonify(results.part3_table(dataset, model, k, metric))
 
 
 @app.route("/api/models")
