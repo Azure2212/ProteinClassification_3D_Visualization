@@ -16,9 +16,18 @@ function esc(s) {
   ));
 }
 
+// Format a value for the on-point data label, matching the chart's unit:
+//   percentage charts -> 1 decimal; count charts -> integer.
+function fmtValue(v, yLabel) {
+  if (String(yLabel).includes("%")) {
+    return (Math.round(v * 10) / 10).toFixed(1);
+  }
+  return Number.isInteger(v) ? String(v) : String(Math.round(v));
+}
+
 // xLabels: array of category labels (e.g. [1,3,5,10,20,50]) shared by all series.
 // series[i].values aligns with xLabels.
-export function lineChart(container, { title, xLabels, series, yMax = 100, yLabel = "%" }) {
+export function lineChart(container, { title, xLabels, series, yMax = 100, yLabel = "%", showLabels = true }) {
   const W = 460, H = 300;
   const m = { top: 34, right: 14, bottom: 40, left: 44 };
   const pw = W - m.left - m.right;
@@ -46,15 +55,41 @@ export function lineChart(container, { title, xLabels, series, yMax = 100, yLabe
   svg += `<text x="${m.left + pw / 2}" y="${H - 4}" text-anchor="middle" class="axis-label">Top-k</text>`;
   svg += `<text x="12" y="${m.top + ph / 2}" text-anchor="middle" class="axis-label" transform="rotate(-90 12 ${m.top + ph / 2})">${esc(yLabel)}</text>`;
 
-  // series
+  // series (lines + points)
   series.forEach((s) => {
     const pts = s.values.map((v, i) => `${xAt(i)},${yAt(v)}`).join(" ");
     svg += `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>`;
     s.values.forEach((v, i) => {
       svg += `<circle cx="${xAt(i)}" cy="${yAt(v)}" r="3" fill="${s.color}">`
-        + `<title>${esc(s.label)} — Top-${xLabels[i]}: ${v}%</title></circle>`;
+        + `<title>${esc(s.label)} — Top-${xLabels[i]}: ${fmtValue(v, yLabel)}${String(yLabel).includes("%") ? "%" : ""}</title></circle>`;
     });
   });
+
+  // data labels — one per point, drawn above the point with a white halo so they
+  // stay readable over lines/gridlines. Within each x column the labels are nudged
+  // apart vertically so overlapping series don't stack illegibly.
+  if (showLabels) {
+    for (let i = 0; i < n; i++) {
+      // collect this column's labels, sorted top-most first
+      const col = series.map((s) => ({
+        color: s.color,
+        val: s.values[i],
+        py: yAt(s.values[i]),
+      })).sort((a, b) => a.py - b.py);
+      const GAP = 11;                 // min vertical spacing between labels
+      let lastY = -Infinity;
+      col.forEach((c) => {
+        let ly = c.py - 7;            // default: just above the point
+        if (ly < lastY + GAP) ly = lastY + GAP;   // push down if too close
+        lastY = ly;
+        const x = xAt(i);
+        svg += `<text x="${x}" y="${ly}" text-anchor="middle" class="pt-label" `
+          + `fill="${c.color}" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">`
+          + `${esc(fmtValue(c.val, yLabel))}</text>`;
+      });
+    }
+  }
+
   svg += `</svg>`;
   container.innerHTML = svg;
 }

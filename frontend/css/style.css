@@ -89,6 +89,7 @@ button.danger:hover { border-color: var(--danger); color: #fca5a5; }
 .chart-title { fill: var(--text); font-size: 13px; font-weight: 600; }
 .grid { stroke: var(--line); stroke-width: 1; }
 .tick { fill: var(--muted); font-size: 10px; }
+.pt-label { font-size: 9px; font-weight: 700; paint-order: stroke; }
 .axis-label { fill: var(--muted); font-size: 11px; }
 .empty { color: var(--muted); font-size: 13px; }
 .legend { display: flex; flex-wrap: wrap; gap: 12px; }
