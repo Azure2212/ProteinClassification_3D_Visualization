@@ -124,17 +124,35 @@ async function load() {
   html += `</tr></tbody></table>`;
   wrap.innerHTML = html;
 
-  // caption + provenance
+  // Big metric banner (what the table shows) + caption + note under the table.
+  const banner = $("#p3-metric");
+  const note = $("#p3-note");
   if (data.source === "excel") {
+    banner.innerHTML =
+      `📊 Metric: <b>Exact prediction</b> — Top-${data.k} accuracy per protein` +
+      `<span class="metric-sub">(from the professor's Excel “similarity check” sheets — top-50 only)</span>`;
     $("#p3-caption").innerHTML =
-      `<b>PDB · ${model}</b> · exact Top-${data.k} · input ${data.input} · ` +
-      `cell = correct/total images per protein (${data.total_images} total)` +
-      `<br><small class="src">source: ${data.note}</small>` +
-      `<br><small class="src">⚠ = row whose per-cell sum differs from the Excel's stated total (source typo; not corrected).</small>`;
+      `<b>PDB · ${model}</b> · input ${data.input} · cell = correct/total images ` +
+      `per protein (${data.total_images} total)` +
+      `<br><small class="src">source: ${data.note}</small>`;
+    note.innerHTML =
+      `<b>How to read:</b> each cell = <b>correct / total</b> images for that protein, where “correct” ` +
+      `means the true class appears in the model’s <b>Top-${data.k}</b> predictions (Exact prediction). ` +
+      `This table does <b>not</b> show the Sequential-similarity metric (a hit when a top-k prediction is a ` +
+      `similarity-neighbor of the true class) — that is the second chart in <b>Training Runs</b>. ` +
+      `⚠ marks a column whose recovered per-cell sum differs from the Excel’s stated total (source typo; shown, not corrected).`;
   } else {
-    $("#p3-caption").textContent =
-      `MAP · ${model} · exact Top-${k} · cell = correct/total images per protein ` +
+    banner.innerHTML =
+      `📊 Metric: <b>Exact prediction</b> — Top-${k} accuracy per protein`;
+    $("#p3-caption").innerHTML =
+      `<b>MAP · ${model}</b> · exact Top-${k} · cell = correct/total images per protein ` +
       `· source: eval trained_results (v2_193)`;
+    note.innerHTML =
+      `<b>How to read:</b> each cell = <b>correct / total</b> images for that protein, computed live from ` +
+      `each run’s <code>ExactNSimilarityCheckResult.csv</code> using the <code>exact_predictTop${k}</code> ` +
+      `column — i.e. the true class is within the model’s <b>Top-${k}</b> predictions (Exact prediction). ` +
+      `The <b>Sequential-similarity</b> metric (<code>countSimilarityTop${k}</code>) is shown separately as the ` +
+      `second chart in <b>Training Runs</b>, not here.`;
   }
 }
 

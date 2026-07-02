@@ -22,15 +22,20 @@ function renderRunList() {
     const row = document.createElement("label");
     row.className = "run-row";
     const tag = [r.model, r.filter, r.smoothing].filter(Boolean).join(" · ");
+    const noData = r.has_curves === false
+      ? ` <span class="run-nodata" title="No ExactNSimilarityCheckResult.csv — cannot draw Top-k chart">⚠ no chart data</span>`
+      : "";
     row.innerHTML = `
       <input type="checkbox" value="${r.run}" ${selected.has(r.run) ? "checked" : ""}>
       <span class="run-name">${r.run}</span>
-      <span class="run-tag">${tag}</span>`;
+      <span class="run-tag">${tag}${noData}</span>`;
     row.querySelector("input").addEventListener("change", (e) =>
       toggleRun(r, e.target.checked));
     box.appendChild(row);
   });
-  $("#p2-count").textContent = `${RUNS.length} MAP runs`;
+  const noData = RUNS.filter((r) => r.has_curves === false).length;
+  $("#p2-count").textContent =
+    `${RUNS.length} MAP runs (newest first)` + (noData ? ` · ${noData} without chart data` : "");
 }
 
 async function toggleRun(meta, on) {
@@ -41,7 +46,8 @@ async function toggleRun(meta, on) {
       const c = await api.runCurves(meta.run);
       selected.get(meta.run).curves = c.curves;
     } catch (e) {
-      selected.get(meta.run).error = e.message;
+      // e.g. run has no ExactNSimilarityCheckResult.csv -> /curves 404
+      selected.get(meta.run).error = e.message || "no chart data";
     }
     showConfig(meta.run);
   } else {
@@ -81,6 +87,14 @@ function redraw() {
     item.className = "legend-item";
     const tag = [s.meta.model, s.meta.filter, s.meta.smoothing].filter(Boolean).join("·");
     item.innerHTML = `<i style="background:${s.color}"></i>${tag} <small>${s.meta.run}</small>`;
+    legend.appendChild(item);
+  });
+  // Explicit notice for selected runs that carry no chart data (no silent drop).
+  [...selected.values()].filter((s) => !s.curves).forEach((s) => {
+    const item = document.createElement("span");
+    item.className = "legend-item nodata";
+    item.innerHTML = `<i></i>⚠ <b>${s.meta.run}</b> — no chart data ` +
+      `<small>(${s.error || "no ExactNSimilarityCheckResult.csv"})</small>`;
     legend.appendChild(item);
   });
 

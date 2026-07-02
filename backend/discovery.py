@@ -59,7 +59,14 @@ def list_filters(dataset):
             continue
         if name.startswith(prefix):
             out.append(name[len(prefix):])
-    return sorted(out)
+    return sorted(out, key=_filter_sort_key)
+
+
+def _filter_sort_key(filt):
+    """Sort filters by numeric value ascending (filter6 < filter10 < filter12),
+    then by any suffix so variants stay grouped (e.g. 12 < 12_amstrong_Applied)."""
+    m = _NUM_RE.search(filt)
+    return (int(m.group(1)) if m else 1 << 30, filt)
 
 
 def _filter_dir(dataset, filt):

@@ -156,14 +156,83 @@ def run_meta(run):
     }
 
 
+_DDMMYYYY_RE = re.compile(r"^(\d{2})(\d{2})(\d{4})")
+_YYYYMMDD_RE = re.compile(r"(20\d{2})(\d{2})(\d{2})")
+
+
+def run_sort_ts(run):
+    """Best-effort timestamp for ordering runs newest-first.
+
+    Runs are named like `03062026_train_...` (DD MM YYYY) or `_demo_test_20260623`
+    (YYYYMMDD). Parse whichever matches; fall back to the directory mtime.
+    """
+    m = _DDMMYYYY_RE.match(run)
+    if m:
+        d, mo, y = (int(g) for g in m.groups())
+        if 1 <= mo <= 12 and 1 <= d <= 31:
+            return y * 10000 + mo * 100 + d
+    m = _YYYYMMDD_RE.search(run)
+    if m:
+        y, mo, d = (int(g) for g in m.groups())
+        if 1 <= mo <= 12 and 1 <= d <= 31:
+            return y * 10000 + mo * 100 + d
+    # fall back to filesystem mtime (scaled into a comparable range)
+    try:
+        return int(os.path.getmtime(os.path.join(config.TRAINED_RESULTS_DIR, run)))
+    except OSError:
+        return 0
+
+
 def map_runs():
-    """Runs whose training data is MAP (Part 2 requirement)."""
+    """Runs whose training data is MAP (Part 2), newest first.
+
+    Each meta carries `has_curves` so the UI can flag runs that have no
+    ExactNSimilarityCheckResult.csv (they can't be charted) instead of dropping
+    them silently.
+    """
     out = []
     for run in list_runs():
         meta = run_meta(run)
         if meta["dataset"] == "MAP" and meta["has_config"]:
-            out.append(meta)
+            m = dict(meta)
+            m["has_curves"] = os.path.isfile(
+                os.path.join(config.TRAINED_RESULTS_DIR, run,
+                             "ExactNSimilarityCheckResult.csv"))
+            out.append(m)
+    out.sort(key=lambda m: run_sort_ts(m["run"]), reverse=True)
     return out
+
+
+# --- Part 4: pipeline scripts (read-only) ------------------------------------
+
+def list_scripts():
+    """Pipeline steps with availability flag (existence of the real file)."""
+    out = []
+    for spec in config.PIPELINE_SCRIPTS:
+        path = os.path.join(config.EMAN2_LIBRARY_DIR, spec["file"])
+        out.append({**spec, "available": os.path.isfile(path)})
+    return out
+
+
+def read_script(name):
+    """Return the real content of a whitelisted pipeline script, or None.
+
+    Only filenames registered in PIPELINE_SCRIPTS are readable (no traversal).
+    """
+    allowed = {s["file"] for s in config.PIPELINE_SCRIPTS}
+    if name not in allowed:
+        return None
+    base = os.path.realpath(config.EMAN2_LIBRARY_DIR)
+    path = os.path.realpath(os.path.join(base, name))
+    if path != base and not path.startswith(base + os.sep):
+        return None
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            return f.read()
+    except OSError:
+        return None
 
 
 # --- ExactN aggregation ------------------------------------------------------

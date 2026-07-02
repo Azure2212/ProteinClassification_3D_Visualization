@@ -22,6 +22,35 @@ TRAINED_RESULTS_DIR = os.environ.get(
     os.path.join(PROJECT_ROOT, "sourceCode", "trained_results"),
 )
 
+# Root that contains the EMAN2 image-generation scripts (read-only, for Part 4).
+EMAN2_LIBRARY_DIR = os.environ.get(
+    "PC3D_EMAN2_LIBRARY_DIR",
+    os.path.join(PROJECT_ROOT, "ProteinData", "Eman2Library"),
+)
+
+# Image-generation pipeline (.pdb -> .mrc -> .hdf -> .png). Each step points at a
+# real script under EMAN2_LIBRARY_DIR; content is served read-only by /api/script.
+PIPELINE_SCRIPTS = [
+    {
+        "step": ".pdb → .mrc",
+        "file": "pdb2mrcScript.py",
+        "desc": "Convert an atomic PDB structure into a 3D density map (.mrc) at a "
+                "chosen resolution, using EMAN2 e2pdb2mrc.py (--res, --center).",
+    },
+    {
+        "step": ".mrc → .hdf",
+        "file": "mrc2hdfScript.py",
+        "desc": "Generate 2D projections of the .mrc volume over many orientations "
+                "into an .hdf stack, using EMAN2 e2project3d.py (orientgen/sym).",
+    },
+    {
+        "step": ".hdf → .png",
+        "file": "hdf2png.py",
+        "desc": "Read the .hdf projection stack and export each projection as an "
+                "8-bit grayscale PNG frame (000.png, 001.png, …).",
+    },
+]
+
 # --- Dataset registry --------------------------------------------------------
 # Each dataset maps to a folder under DATASET_DIR and a glob for its filter dirs.
 DATASETS = {

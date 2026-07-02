@@ -25,4 +25,6 @@ export const api = {
   runCurves: (run) => getJSON(`/api/run/${encodeURIComponent(run)}/curves`),
   part3: (dataset, model, k) =>
     getJSON(`/api/part3?dataset=${dataset}&model=${encodeURIComponent(model)}&k=${k}`),
+  scripts: () => getJSON("/api/scripts"),
+  script: (name) => getJSON(`/api/script?name=${encodeURIComponent(name)}`),
 };

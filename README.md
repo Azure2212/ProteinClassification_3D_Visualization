@@ -4,19 +4,25 @@ A lightweight, **read-only** dashboard for exploring the ProteinClassification_3
 project results. It streams images and result CSVs directly from their existing
 locations — **no heavy data is copied into this repo**.
 
-## Three views
+## Four views
 
-1. **12 Real Proteins** — checkbox-driven GIF-like players. Each player loops a
-   protein's frames (1→n, adjustable speed / pause / step). Add many players to
-   compare a protein across `dataset × filter × split` and the professor's held-out
-   test set (origin / blackbackground / simulatedbackground) side by side.
-2. **Training Runs** (wandb-style) — lists only runs trained on **MAP** data. Select
+1. **Visualization** — GIF-like players (layers). Pick a dataset and **multiple
+   filters** (multi-select checkbox dropdown, sorted by numeric value) then
+   **+ Add layer** to spawn one card per `filter × protein` at once. On first open
+   it auto-loads `7UZM` across all filters as a placeholder. **Reset / Reload all**
+   restarts every visible layer from frame 0. Also plays the professor's held-out
+   test set (origin / blackbackground / simulatedbackground).
+2. **Training Runs** (wandb-style) — lists only runs trained on **MAP** data,
+   **sorted newest-first** (date parsed from the run name, mtime fallback). Select
    runs to see their `config.json` and two Top-k accuracy line charts
    (**Exact prediction** | **Sequential similarity / approx**), computed live from
-   each run's `ExactNSimilarityCheckResult.csv`.
+   each run's `ExactNSimilarityCheckResult.csv`. Runs missing that CSV are marked
+   **⚠ no chart data** in the list and in the legend (never silently dropped).
 3. **Summary Table** — pick `dataset × model (× Top-k)`; renders a
    protein (rows) × filter/variant (cols) table where each cell is `correct/total`
-   exact predictions for that protein among the 12 real proteins.
+   exact predictions for that protein among the 12 real proteins. A banner above
+   the table names the metric (**Exact prediction**, Top-k) and a note below
+   contrasts it with the Sequential-similarity metric.
    - **MAP** — computed live from each run's `ExactNSimilarityCheckResult.csv`
      (`trained_results`, v2_193), Top-k selectable.
    - **PDB** — sourced directly from the professor's Excel
@@ -29,6 +35,10 @@ locations — **no heavy data is copied into this repo**.
      generator recovers them as `M/D` and **flags (⚠)** any row whose recovered
      per-cell sum differs from the Excel's stated total (source typos — shown, not
      silently corrected).
+4. **Scripts to run** — documents the image-generation pipeline
+   `.pdb → .mrc → .hdf → .png`, showing the **real content** of each EMAN2 script
+   (`pdb2mrcScript.py`, `mrc2hdfScript.py`, `hdf2png.py`) in a scrollable code box.
+   Content is read live (read-only, whitelisted) from `PC3D_EMAN2_LIBRARY_DIR`.
 
 ## Data sources (configurable, never copied)
 
@@ -39,6 +49,7 @@ Defaults (override via env vars in `config.py`):
 | `PC3D_PROJECT_ROOT`          | `/data/atran16/ProteinClassification_3D` |
 | `PC3D_DATASET_DIR`           | `$PROJECT_ROOT/ProteinData/Dataset` |
 | `PC3D_TRAINED_RESULTS_DIR`   | `$PROJECT_ROOT/sourceCode/trained_results` |
+| `PC3D_EMAN2_LIBRARY_DIR`     | `$PROJECT_ROOT/ProteinData/Eman2Library` (Part 4 scripts) |
 | `PC3D_HOST` / `PC3D_PORT`    | `0.0.0.0` / `8070` |
 
 Verified layout the server reads:

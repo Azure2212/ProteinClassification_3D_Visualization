@@ -10,9 +10,10 @@
   <header class="topbar">
     <div class="brand">🧬 ProteinClassification&nbsp;3D <span>Visualization</span></div>
     <nav class="tabs">
-      <button class="tab active" data-tab="p1">1 · 12 Real Proteins</button>
+      <button class="tab active" data-tab="p1">1 · Visualization</button>
       <button class="tab" data-tab="p2">2 · Training Runs</button>
       <button class="tab" data-tab="p3">3 · Summary Table</button>
+      <button class="tab" data-tab="p4">4 · Scripts to run</button>
     </nav>
   </header>
 
@@ -28,7 +29,13 @@
       </div>
       <div id="p1-render-fields" class="ctrl-inline">
         <div class="ctrl-group"><label>Dataset</label><select id="p1-dataset"></select></div>
-        <div class="ctrl-group"><label>Filter</label><select id="p1-filter"></select></div>
+        <div class="ctrl-group">
+          <label>Filters (multi-select)</label>
+          <div id="p1-filter-ms" class="ms-dropdown">
+            <button type="button" class="ms-toggle" id="p1-filter-toggle">select filters ▾</button>
+            <div class="ms-panel" id="p1-filter-panel" hidden></div>
+          </div>
+        </div>
         <div class="ctrl-group"><label>Split</label>
           <select id="p1-split">
             <option value="train126">train126 (126 frames)</option>
@@ -46,12 +53,13 @@
         </div>
       </div>
       <div class="ctrl-group"><label>Protein</label><select id="p1-protein"></select></div>
-      <button id="p1-add" class="primary">+ Add player</button>
+      <button id="p1-add" class="primary">+ Add layer</button>
     </div>
 
     <div class="controls sub">
       <button id="p1-play-all">▶ Play all</button>
       <button id="p1-pause-all">⏸ Pause all</button>
+      <button id="p1-reset-all" class="primary">↺ Reset / Reload all</button>
       <button id="p1-clear" class="danger">✕ Clear</button>
       <div class="ctrl-group grow">
         <label>Default speed <span id="p1-speed-all-val">400ms</span></label>
@@ -94,7 +102,21 @@
       </div>
       <div class="caption" id="p3-caption"></div>
     </div>
+    <div id="p3-metric" class="metric-banner"></div>
     <div id="p3-table-wrap" class="table-wrap"></div>
+    <div id="p3-note" class="table-note"></div>
+  </section>
+
+  <!-- ===================== PART 4 ===================== -->
+  <section id="p4" class="panel">
+    <div class="scripts-intro">
+      <h2>Image-generation pipeline</h2>
+      <p>How a protein structure becomes the rendered PNG frames used across this
+      site. For <b>.pdb</b> inputs the pipeline is
+      <code>.pdb → .mrc → .hdf → .png</code>. Each step below runs the real script
+      shown (read straight from <code id="p4-libpath"></code>, EMAN2 environment).</p>
+    </div>
+    <div id="p4-steps" class="scripts-steps"><div class="loading">loading…</div></div>
   </section>
 
   <script type="module" src="/js/main.js"></script>
