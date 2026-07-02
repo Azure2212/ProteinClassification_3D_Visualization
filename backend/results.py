@@ -14,6 +14,15 @@ import config
 # top-k columns present in ExactNSimilarityCheckResult.csv
 EXACT_KS = [1, 3, 5, 10, 20, 50]
 
+
+def _filter_num(label):
+    """Leading integer of a filter label for numeric column ordering.
+
+    'filter6'->6, 'filter12_amstrong_Applied'->12, 'filter=14'->14.
+    Labels with no number (e.g. 'without smoothing') sort last."""
+    m = re.search(r"\d+", str(label or ""))
+    return int(m.group(0)) if m else 1 << 30
+
 # Baked PDB Part-3 data (parsed offline from the professor's Excel by
 # gen_pdb_part3.py). MAP still comes from the live trained_results CSVs.
 _PDB_PART3_PATH = os.path.join(os.path.dirname(__file__), "data", "pdb_part3.json")
@@ -65,6 +74,10 @@ def pdb_part3_table(model):
             "mismatch": c["mismatch"],
             "recovered_cells": c.get("recovered_cells", []),
         })
+    # order by numeric filter ascending (filter=6 < 12 < 14); non-numeric
+    # smoothing-comparison columns keep their original relative order (stable)
+    columns = [c for _, c in sorted(
+        enumerate(columns), key=lambda ic: (_filter_num(ic[1]["filter"]), ic[0]))]
     return {
         "source": "excel",
         "k": data.get("topk", 50),
@@ -97,13 +110,29 @@ def _is_scratch_run(name):
     return low.startswith("_demo") or low.startswith("_test")
 
 
+@functools.lru_cache(maxsize=512)
+def _is_debug_run(name):
+    """True if the run's configs.json marks it as a debug run (`isDebug` truthy).
+
+    Debug runs are hidden from every view. The flag is read from the run's own
+    config — we do NOT guess from near-zero accuracy (that would drop real runs).
+    """
+    cfg = load_config(name)
+    v = cfg.get("isDebug")
+    if isinstance(v, str):
+        return v.strip().lower() in ("1", "true", "yes")
+    return bool(v)
+
+
 def list_runs():
     base = config.TRAINED_RESULTS_DIR
     if not os.path.isdir(base):
         return []
     return sorted(
         n for n in os.listdir(base)
-        if os.path.isdir(os.path.join(base, n)) and not _is_scratch_run(n)
+        if os.path.isdir(os.path.join(base, n))
+        and not _is_scratch_run(n)
+        and not _is_debug_run(n)
     )
 
 
@@ -369,5 +398,7 @@ def part3_table(dataset, model, k=50):
             "total_images": total_imgs,
             "cells": cells,
         })
-    columns.sort(key=lambda c: (str(c["filter"]), c["smoothing"]))
+    # order columns by numeric filter value ascending (filter1 < filter6 < filter12…),
+    # then by smoothing/run so same-filter variants stay grouped deterministically
+    columns.sort(key=lambda c: (_filter_num(c["filter"]), c["smoothing"] or "", c["run"]))
     return {"k": k, "proteins": proteins, "columns": columns}
