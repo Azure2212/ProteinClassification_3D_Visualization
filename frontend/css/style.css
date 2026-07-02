@@ -71,6 +71,20 @@ button.danger:hover { border-color: var(--danger); color: #fca5a5; }
 .player-ctrl .frame-count { font-size: 11px; color: var(--muted); min-width: 42px; }
 .player-ctrl .speed { flex: 1; min-width: 40px; }
 
+/* Part 1 — raw images from the professor */
+.raw-section { margin-top: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; box-shadow: var(--shadow); }
+.raw-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin-bottom: 12px; }
+.raw-head h3 { margin: 0; font-size: 16px; color: var(--accent-dark); }
+.raw-head .caption { margin-left: auto; }
+.raw-layout { display: grid; grid-template-columns: 200px 1fr; gap: 14px; align-items: start; }
+@media (max-width: 760px) { .raw-layout { grid-template-columns: 1fr; } }
+.raw-lbl { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
+.raw-select { width: 100%; }
+.raw-right { min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; align-content: start; }
+.raw-thumb { margin: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #0b1a2e; }
+.raw-thumb img { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; }
+.raw-thumb figcaption { font-size: 11px; color: var(--muted); background: var(--panel); padding: 3px 4px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 /* Part 2 */
 .p2-layout { display: grid; grid-template-columns: 320px 1fr; gap: 14px; }
 .p2-side { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; height: calc(100vh - 130px); display: flex; flex-direction: column; box-shadow: var(--shadow); }

@@ -52,6 +52,49 @@ async function init() {
 
   // Default placeholder: 7UZM across ALL filters of the default (MAP) dataset.
   loadDefault();
+
+  initRaw();
+}
+
+// --- Raw images from the professor (193 total) ------------------------------
+const BG_LABELS = {
+  origin: "Original", black: "Black background", sim: "Simulated background",
+};
+
+function initRaw() {
+  const bgSel = $("#raw-bg");
+  (META.testset_versions || ["origin"]).forEach((v) =>
+    bgSel.appendChild(opt(v, BG_LABELS[v] || v)));
+  const pSel = $("#raw-protein");
+  META.real_proteins.forEach((p, i) => {
+    const o = opt(p);
+    if (i === 0) o.selected = true;
+    pSel.appendChild(o);
+  });
+  bgSel.addEventListener("change", loadRawImages);
+  pSel.addEventListener("change", loadRawImages);
+  $("#raw-download").addEventListener("click", () => {
+    window.location.href = `/api/testset_download?version=${$("#raw-bg").value}`;
+  });
+  loadRawImages();
+}
+
+async function loadRawImages() {
+  const protein = $("#raw-protein").value;
+  const bg = $("#raw-bg").value;
+  const box = $("#raw-images");
+  box.innerHTML = `<div class="loading">loading…</div>`;
+  try {
+    const data = await api.testsetImages(protein, bg);
+    if (!data.images.length) { box.innerHTML = `<div class="empty">no images</div>`; return; }
+    box.innerHTML = data.images.map((im) =>
+      `<figure class="raw-thumb"><img src="${im.url}" alt="${im.name}" loading="lazy">` +
+      `<figcaption>${protein}/${im.name}</figcaption></figure>`).join("");
+    $("#raw-status").textContent =
+      `${protein} · ${BG_LABELS[bg] || bg} · ${data.images.length} images`;
+  } catch (e) {
+    box.innerHTML = `<div class="err">${e.message}</div>`;
+  }
 }
 
 function currentSourceType() {

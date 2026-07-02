@@ -80,6 +80,11 @@ SPLITS = {
     "test30": "PNG30_random",
 }
 
+# Filters exposed in the Visualization filter picker (exact ids, numeric order).
+# Other on-disk variants (filter12_amstrong_Applied, filter12_trueA_*, filter15…)
+# are hidden from the dropdown.
+ALLOWED_FILTERS = ["filter1", "filter6", "filter8", "filter10", "filter12", "filter14"]
+
 # Professor Su held-out real test set (the 12 real proteins, 193 images total).
 TESTSET_ROOT = "testingDataFromProfessorSu_v2_193"
 TESTSET_VERSIONS = {

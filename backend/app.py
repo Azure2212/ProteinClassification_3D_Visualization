@@ -5,6 +5,8 @@ Serves the frontend at /  and JSON/image endpoints under /api.
 No data is copied: images are streamed directly from the configured roots.
 """
 import os
+import io
+import zipfile
 import mimetypes
 
 from flask import Flask, jsonify, send_file, send_from_directory, request, abort
@@ -224,6 +226,25 @@ def api_testset_images():
     } for i, p in enumerate(paths)]
     return jsonify({"protein": protein, "version": version,
                     "count": len(images), "images": images})
+
+
+@app.route("/api/testset_download")
+def api_testset_download():
+    """Zip ALL images of one test-set version, preserving the folder tree
+    testingDataFromProfessorSu_v2_193/<version>/<protein>/<file>."""
+    version = request.args.get("version", "origin")
+    folder = config.TESTSET_VERSIONS.get(version)
+    vdir = discovery.testset_dir(version)
+    if not folder or not vdir or not os.path.isdir(vdir):
+        abort(404)
+    prefix = os.path.join(config.TESTSET_ROOT, folder)
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for protein, name, path in discovery.testset_all(version):
+            z.write(path, os.path.join(prefix, protein, name))
+    buf.seek(0)
+    return send_file(buf, mimetype="application/zip", as_attachment=True,
+                     download_name=f"{config.TESTSET_ROOT}_{folder}.zip")
 
 
 @app.route("/api/predict_runs")

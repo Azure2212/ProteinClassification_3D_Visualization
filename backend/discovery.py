@@ -59,6 +59,9 @@ def list_filters(dataset):
             continue
         if name.startswith(prefix):
             out.append(name[len(prefix):])
+    # keep only the whitelisted filters (hide amstrong/trueA/15… variants)
+    allowed = set(config.ALLOWED_FILTERS)
+    out = [f for f in out if f in allowed]
     return sorted(out, key=_filter_sort_key)
 
 
@@ -161,3 +164,18 @@ def testset_frames(version, protein):
     frames = [f for f in os.listdir(pdir) if f.lower().endswith(".png")]
     frames.sort(key=_numeric_key)
     return [os.path.join(pdir, f) for f in frames]
+
+
+def testset_dir(version):
+    """Public: absolute path of a test-set version dir (guarded). '' if unknown."""
+    try:
+        return _testset_dir(version)
+    except ValueError:
+        return ""
+
+
+def testset_all(version):
+    """Yield (protein, filename, abspath) for every PNG in a version, sorted."""
+    for protein in testset_proteins(version):
+        for path in testset_frames(version, protein):
+            yield protein, os.path.basename(path), path
