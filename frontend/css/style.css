@@ -214,6 +214,21 @@ small.warn { color: #fbbf24; font-weight: 600; }
 .pred-imgwrap { text-align: center; position: sticky; top: 70px; }
 .pred-img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #0b1a2e; border-radius: 8px; }
 .pred-name { font-size: 11px; color: var(--muted); margin-top: 4px; }
+/* Part 5 — overview matrices */
+.pred-overview { display: flex; flex-direction: column; gap: 10px; }
+.pred-overview:empty { display: none; }
+.pred-details { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.ov-legend { margin: 2px 0; }
+.ov-grids { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 900px) { .ov-grids { grid-template-columns: 1fr; } }
+.ov-block { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; box-shadow: var(--shadow); min-width: 0; }
+.ov-title { font-size: 13px; font-weight: 700; color: var(--accent-dark); margin-bottom: 8px; }
+.ov-scroll { overflow-x: auto; }
+.ov-matrix { border-collapse: collapse; font-size: 11px; }
+.ov-matrix th { font-weight: 600; color: var(--muted); padding: 2px 4px; text-align: center; }
+.ov-matrix th.ov-imgcol { text-align: left; white-space: nowrap; position: sticky; left: 0; background: var(--panel); }
+.ov-cell { width: 16px; height: 16px; padding: 0; border: 1px solid var(--panel); border-radius: 2px; }
+.ov-hit { font-weight: 700; text-align: center; padding: 0 6px; }
 .pred-charts { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .pred-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text); }
 .pred-legend .lg { display: flex; align-items: center; gap: 6px; }

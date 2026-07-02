@@ -137,14 +137,23 @@ async function runPrediction() {
 
   const names = images.map((i) => i.name).filter((n) => selectedImages.has(n));
   results.innerHTML = "";
+  // Overview (2 matrices) goes ON TOP; per-image detail cards below.
+  const overview = document.createElement("div");
+  overview.className = "pred-overview";
+  const details = document.createElement("div");
+  details.className = "pred-details";
+  results.append(overview, details);
+
+  const collected = [];
   for (const name of names) {
     const card = document.createElement("div");
     card.className = "pred-card";
     card.innerHTML = `<div class="pred-head">Predicting <b>${protein}/${name}</b> …
       <span class="loading">running model</span></div>`;
-    results.appendChild(card);
+    details.appendChild(card);
     try {
       const r = await api.predict(selectedRun, protein, name, 20);
+      collected.push(r);
       renderResult(card, r);
     } catch (e) {
       const unsupported = /unsupported|class_to_idx|class mapping/i.test(e.message);
@@ -154,6 +163,63 @@ async function runPrediction() {
           : "Prediction failed: " + e.message}</div>`;
     }
   }
+  renderOverview(overview, protein, collected);
+}
+
+// Overview: two image×rank matrices. Rows = images, columns = top-k rank.
+// Left (Exact): cell red if is_exact else black.
+// Right (Similarity): red if is_exact, blue if is_neighbor, else black.
+function renderOverview(host, protein, results) {
+  if (!results.length) { host.innerHTML = ""; return; }
+  const K = Math.max(...results.map((r) => r.predictions.length));
+
+  const legend =
+    `<div class="pred-legend ov-legend">
+       <span class="lg"><i style="background:${COL.exact}"></i>Exact prediction (predicted = ${protein})</span>
+       <span class="lg"><i style="background:${COL.neighbor}"></i>Neighbor (≥30% identity)</span>
+       <span class="lg"><i style="background:${COL.unrelated}"></i>Unrelated</span>
+     </div>`;
+
+  const cellColor = (p, mode) => {
+    if (!p) return "transparent";
+    if (p.is_exact) return COL.exact;
+    if (mode === "sim" && p.is_neighbor) return COL.neighbor;
+    return COL.unrelated;
+  };
+  const kind = (p) => p.is_exact ? "exact" : (p.is_neighbor ? "neighbor" : "unrelated");
+
+  const matrix = (mode) => {
+    let head = `<tr><th class="ov-imgcol">image \\ rank</th>`;
+    for (let j = 1; j <= K; j++) head += `<th>${j}</th>`;
+    head += `<th class="ov-hit">hit?</th></tr>`;
+
+    let body = "";
+    results.forEach((r) => {
+      const hit = mode === "exact"
+        ? r.predictions.some((p) => p.is_exact)
+        : r.predictions.some((p) => p.is_exact || p.is_neighbor);
+      const hitColor = r.predictions.some((p) => p.is_exact) ? COL.exact
+        : (mode === "sim" && r.predictions.some((p) => p.is_neighbor) ? COL.neighbor : COL.unrelated);
+      body += `<tr><th class="ov-imgcol">${r.image}</th>`;
+      for (let j = 1; j <= K; j++) {
+        const p = r.predictions[j - 1];
+        const c = cellColor(p, mode);
+        const tip = p ? `rank ${j}: ${p.label} ${p.prob}% (${kind(p)})` : "";
+        body += `<td class="ov-cell" style="background:${c}" title="${tip}"></td>`;
+      }
+      body += `<td class="ov-hit" style="color:${hit ? hitColor : COL.unrelated}">` +
+        `${hit ? "✓" : "✗"}</td></tr>`;
+    });
+    return `<table class="ov-matrix">${head}${body}</table>`;
+  };
+
+  host.innerHTML = legend +
+    `<div class="ov-grids">
+       <div class="ov-block"><div class="ov-title">Exact prediction</div>
+         <div class="ov-scroll">${matrix("exact")}</div></div>
+       <div class="ov-block"><div class="ov-title">Sequential similarity</div>
+         <div class="ov-scroll">${matrix("sim")}</div></div>
+     </div>`;
 }
 
 // One chart per image, 3 colours: red = exact (predicted label == protein),
