@@ -10,7 +10,7 @@ import mimetypes
 from flask import Flask, jsonify, send_file, send_from_directory, request, abort
 
 import config
-from backend import discovery, results
+from backend import discovery, results, predict
 
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
 
@@ -205,6 +205,55 @@ def api_script():
     if content is None:
         return jsonify({"error": f"script not available: {name}"}), 404
     return jsonify({"name": name, "content": content})
+
+
+# --- Part 5: prediction ------------------------------------------------------
+@app.route("/api/testset_images")
+def api_testset_images():
+    """List the real (professor test-set) images for one protein."""
+    protein = request.args.get("protein")
+    version = request.args.get("version", "origin")
+    try:
+        paths = discovery.testset_frames(version, protein)
+    except (ValueError, FileNotFoundError, KeyError) as e:
+        return jsonify({"error": str(e)}), 404
+    images = [{
+        "name": os.path.basename(p),
+        "url": f"/api/image?source=testset&version={version}"
+               f"&protein={protein}&i={i}",
+    } for i, p in enumerate(paths)]
+    return jsonify({"protein": protein, "version": version,
+                    "count": len(images), "images": images})
+
+
+@app.route("/api/predict_runs")
+def api_predict_runs():
+    """MAP runs, each flagged whether it can be predicted (has class_to_idx.json)."""
+    out = []
+    for m in results.map_runs():
+        out.append({**m, "can_predict": predict.can_predict(m["run"])})
+    return jsonify({"runs": out})
+
+
+@app.route("/api/predict")
+def api_predict():
+    run = request.args.get("run", "")
+    protein = request.args.get("protein", "")
+    image = request.args.get("image", "1")
+    try:
+        top_k = int(request.args.get("top_k", "20"))
+    except ValueError:
+        top_k = 20
+    top_k = max(1, min(top_k, 50))
+    try:
+        return jsonify(predict.predict(run, protein, image, top_k))
+    except predict.PredictUnavailable as e:
+        return jsonify({"error": str(e),
+                        "reason": "unsupported_run"}), 422
+    except (ValueError, FileNotFoundError) as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:  # inference/runtime failure -> tidy 500, no crash
+        return jsonify({"error": f"prediction failed: {e}"}), 500
 
 
 if __name__ == "__main__":

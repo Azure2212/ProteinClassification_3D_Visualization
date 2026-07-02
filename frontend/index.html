@@ -14,6 +14,7 @@
       <button class="tab" data-tab="p2">2 · Training Runs</button>
       <button class="tab" data-tab="p3">3 · Summary Table</button>
       <button class="tab" data-tab="p4">4 · Scripts to run</button>
+      <button class="tab" data-tab="p5">5 · Prediction</button>
     </nav>
   </header>
 
@@ -123,6 +124,28 @@
       shown (read straight from <code id="p4-libpath"></code>, EMAN2 environment).</p>
     </div>
     <div id="p4-steps" class="scripts-steps"><div class="loading">loading…</div></div>
+  </section>
+
+  <!-- ===================== PART 5 ===================== -->
+  <section id="p5" class="panel">
+    <div class="controls">
+      <div class="ctrl-group"><label>Protein (12 real)</label><select id="p5-protein"></select></div>
+      <button id="p5-select-all">Chọn hết ảnh</button>
+      <button id="p5-run" class="primary">▶ Run prediction</button>
+      <div class="caption" id="p5-status"></div>
+    </div>
+    <div class="p5-layout">
+      <aside class="p5-side">
+        <div class="p5-block-title">Real images — click to select (multi)</div>
+        <div id="p5-images" class="p5-thumbs"><div class="empty">pick a protein</div></div>
+        <div class="p5-block-title">Checkpoint (run) — pick one</div>
+        <input id="p5-run-search" type="search" placeholder="filter runs…">
+        <div id="p5-runs" class="run-list p5-runs"></div>
+      </aside>
+      <div class="p5-main" id="p5-results">
+        <div class="empty">Select a protein, tick image(s) and a run, then “Run prediction”.</div>
+      </div>
+    </div>
   </section>
 
   <script type="module" src="/js/main.js"></script>

@@ -28,6 +28,12 @@ EMAN2_LIBRARY_DIR = os.environ.get(
     os.path.join(PROJECT_ROOT, "ProteinData", "Eman2Library"),
 )
 
+# Directory holding predict_infer.py (Part 5 inference module). Added to sys.path.
+PREDICT_MODULE_DIR = os.environ.get(
+    "PC3D_PREDICT_DIR",
+    os.path.join(PROJECT_ROOT, "sourceCode", "visuallization"),
+)
+
 # Image-generation pipeline (.pdb -> .mrc -> .hdf -> .png). Each step points at a
 # real script under EMAN2_LIBRARY_DIR; content is served read-only by /api/script.
 PIPELINE_SCRIPTS = [
