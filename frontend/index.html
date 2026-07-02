@@ -135,13 +135,16 @@
       <div class="caption" id="p5-status"></div>
     </div>
     <div class="p5-layout">
-      <aside class="p5-side">
+      <div class="p5-block">
         <div class="p5-block-title">Real images — click to select (multi)</div>
         <div id="p5-images" class="p5-thumbs"><div class="empty">pick a protein</div></div>
-        <div class="p5-block-title">Checkpoint (run) — pick one</div>
+      </div>
+      <div class="p5-block">
+        <div class="p5-block-title">Checkpoint (run) — click one to select &amp; view its config.json</div>
         <input id="p5-run-search" type="search" placeholder="filter runs…">
         <div id="p5-runs" class="run-list p5-runs"></div>
-      </aside>
+        <div id="p5-config" class="p5-config"></div>
+      </div>
       <div class="p5-main" id="p5-results">
         <div class="empty">Select a protein, tick image(s) and a run, then “Run prediction”.</div>
       </div>

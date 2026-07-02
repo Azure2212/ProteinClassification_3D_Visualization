@@ -89,9 +89,36 @@ function renderRuns() {
       ` <span class="run-nodata" title="No class_to_idx.json — this run can't be predicted">⚠ no class mapping</span>`;
     row.innerHTML = `<span class="run-name" title="${r.run}">${r.run}</span>` +
       `<span class="run-tag">${tag}${warn}</span>`;
-    row.addEventListener("click", () => { selectedRun = r.run; renderRuns(); status(); });
+    row.addEventListener("click", () => {
+      selectedRun = r.run; renderRuns(); status(); showConfig(r.run);
+    });
     box.appendChild(row);
   });
+}
+
+// Click a run -> show its configs.json in a scrollable navy code box (like Part 2).
+async function showConfig(run) {
+  const panel = $("#p5-config");
+  panel.innerHTML = `<div class="config-card"><div class="config-head">config.json — ` +
+    `<b>${run}</b></div><div class="loading">loading config…</div></div>`;
+  try {
+    const { config } = await api.runConfig(run);
+    panel.innerHTML = `<div class="config-card">` +
+      `<div class="config-head">config.json — <b>${run}</b></div>` +
+      `<pre class="config-json p5-config-json">${syntax(JSON.stringify(config, null, 2))}</pre></div>`;
+  } catch (e) {
+    panel.innerHTML = `<div class="config-card"><div class="config-head">config.json — ` +
+      `<b>${run}</b></div><div class="err">no config: ${e.message}</div></div>`;
+  }
+}
+
+function syntax(json) {
+  return json
+    .replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))
+    .replace(/("(\\.|[^"\\])*")(\s*:)?/g, (m, _p, _q, colon) =>
+      colon ? `<span class="k">${m}</span>` : `<span class="s">${m}</span>`)
+    .replace(/\b(true|false|null)\b/g, `<span class="b">$1</span>`)
+    .replace(/\b(-?\d+\.?\d*(e[-+]?\d+)?)\b/gi, `<span class="n">$1</span>`);
 }
 
 function status() {

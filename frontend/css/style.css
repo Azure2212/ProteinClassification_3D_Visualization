@@ -190,18 +190,23 @@ small.warn { color: #fbbf24; font-weight: 600; }
 .bar-val { font-size: 8.5px; font-weight: 700; }
 .bar-lab { fill: var(--muted); font-size: 9px; }
 .bar-lab.hl { fill: var(--danger); font-weight: 700; }
-.p5-layout { display: grid; grid-template-columns: 320px 1fr; gap: 14px; align-items: start; }
-.p5-side { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; box-shadow: var(--shadow); position: sticky; top: 70px; }
-.p5-block-title { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 8px 2px 6px; }
+.p5-layout { display: flex; flex-direction: column; gap: 14px; }
+.p5-block { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; box-shadow: var(--shadow); }
+.p5-block-title { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 2px 8px; }
+.p5-block #p5-run-search { width: 100%; margin-bottom: 8px; }
 .p5-thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 8px; }
 .p5-thumb { padding: 0; border: 2px solid var(--line); border-radius: 8px; overflow: hidden; background: #0b1a2e; cursor: pointer; display: flex; flex-direction: column; }
 .p5-thumb img { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; }
 .p5-thumb-name { font-size: 10px; color: var(--muted); background: var(--panel); padding: 2px 0; text-align: center; }
 .p5-thumb.sel { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(31,111,229,.25); }
 .p5-thumb.sel .p5-thumb-name { color: var(--accent); font-weight: 700; }
-.p5-runs { max-height: 320px; margin-top: 4px; }
+.p5-runs { max-height: 300px; margin-top: 4px; }
 .p5-run-row { grid-template-columns: 1fr; cursor: pointer; }
 .p5-run-row.active { background: rgba(31,111,229,.12); outline: 1px solid var(--accent); }
+.p5-config { margin-top: 10px; }
+.p5-config:empty { display: none; }
+.p5-config .config-card { border: 1px solid var(--line); }
+.p5-config-json { max-height: 240px; }   /* double the Part 2 config box */
 .p5-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .pred-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; box-shadow: var(--shadow); }
 .pred-head { font-size: 13px; margin-bottom: 10px; color: var(--text); }
