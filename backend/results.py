@@ -1,0 +1,229 @@
+"""Parse trained_results/<run>/ artifacts for Part 2 (wandb-style) and Part 3 (table).
+
+All numbers are read straight from the run CSVs — nothing is invented. When an
+artifact is missing the run is reported with `available: false` and empty series.
+"""
+import os
+import csv
+import json
+import re
+import functools
+
+import config
+
+# top-k columns present in ExactNSimilarityCheckResult.csv
+EXACT_KS = [1, 3, 5, 10, 20, 50]
+
+
+def _run_path(run, *parts):
+    base = os.path.realpath(config.TRAINED_RESULTS_DIR)
+    target = os.path.realpath(os.path.join(base, run, *parts))
+    if target != base and not target.startswith(base + os.sep):
+        raise ValueError("path escapes trained_results")
+    return target
+
+
+def list_runs():
+    base = config.TRAINED_RESULTS_DIR
+    if not os.path.isdir(base):
+        return []
+    return sorted(
+        n for n in os.listdir(base) if os.path.isdir(os.path.join(base, n))
+    )
+
+
+def load_config(run):
+    """Return parsed configs.json (real filename) or {} if absent."""
+    p = _run_path(run, "configs.json")
+    if not os.path.isfile(p):
+        return {}
+    try:
+        with open(p) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def _detect_dataset(cfg, run):
+    tp = (cfg.get("train_protein_path") or "").upper()
+    if "MAP" in tp or "MAP" in run.upper():
+        return "MAP"
+    if "PDB" in tp or "PDB" in run.upper():
+        return "PDB"
+    return None
+
+
+def _detect_filter(cfg, run):
+    """Best-effort filter id + smoothing tag from config path / run name."""
+    tp = cfg.get("train_protein_path") or ""
+    m = re.search(r"PNG_(filter[0-9A-Za-z_]+?)/PNG126", tp)
+    filt = m.group(1) if m else None
+    if not filt:
+        m = re.search(r"(filter[0-9]+[0-9A-Za-z_]*)", run)
+        filt = m.group(1) if m else "?"
+    # trim trailing split noise
+    filt = filt.split("/")[0]
+    return filt
+
+
+def _detect_smoothing(run):
+    m = re.search(r"(hardSmoothing|ourSmoothing)_([0-9_]+)", run)
+    if m:
+        return f"{m.group(1)}={m.group(2).replace('_', '.')}"
+    if "mix3EMDB" in run or "mixEMDB" in run.lower():
+        return "mixEMDB"
+    if "amstrong" in run:
+        return "amstrong"
+    return ""
+
+
+@functools.lru_cache(maxsize=256)
+def run_meta(run):
+    cfg = load_config(run)
+    dataset = _detect_dataset(cfg, run)
+    return {
+        "run": run,
+        "dataset": dataset,
+        "model": cfg.get("model"),
+        "filter": _detect_filter(cfg, run) if cfg else None,
+        "smoothing": _detect_smoothing(run),
+        "has_config": bool(cfg),
+        "max_epoch": cfg.get("max_epoch_num"),
+        "train_protein_path": cfg.get("train_protein_path"),
+    }
+
+
+def map_runs():
+    """Runs whose training data is MAP (Part 2 requirement)."""
+    out = []
+    for run in list_runs():
+        meta = run_meta(run)
+        if meta["dataset"] == "MAP" and meta["has_config"]:
+            out.append(meta)
+    return out
+
+
+# --- ExactN aggregation ------------------------------------------------------
+
+def _read_exactn(run):
+    p = _run_path(run, "ExactNSimilarityCheckResult.csv")
+    if not os.path.isfile(p):
+        return None
+    rows = []
+    with open(p, newline="") as f:
+        for row in csv.DictReader(f):
+            rows.append(row)
+    return rows
+
+
+def _to_bool(v):
+    return str(v).strip().lower() == "true"
+
+
+def topk_curves(run):
+    """Two top-k accuracy curves for Part 2 charts.
+
+    Returns {'ks', 'exact': [%...], 'similarity': [%...], 'total': N} or None.
+    exact       = mean(exact_predictTopK)      -> model argmax correctness
+    similarity  = mean(countSimilarityTopK)    -> approx (>= id-threshold) match
+    """
+    rows = _read_exactn(run)
+    if not rows:
+        return None
+    total = len(rows)
+    exact, sim = [], []
+    for k in EXACT_KS:
+        ec = sum(_to_bool(r.get(f"exact_predictTop{k}")) for r in rows)
+        sc = sum(_to_bool(r.get(f"countSimilarityTop{k}")) for r in rows)
+        exact.append(round(100.0 * ec / total, 2) if total else 0.0)
+        sim.append(round(100.0 * sc / total, 2) if total else 0.0)
+    return {"ks": EXACT_KS, "exact": exact, "similarity": sim, "total": total}
+
+
+def real_test_tracking(run):
+    """Per-epoch exact top-k counts from realTestTracking.csv (optional extra)."""
+    p = _run_path(run, "realTestTracking.csv")
+    if not os.path.isfile(p):
+        return None
+    with open(p, newline="") as f:
+        reader = csv.DictReader(f)
+        cols = reader.fieldnames or []
+        data = {c: [] for c in cols}
+        for row in reader:
+            for c in cols:
+                try:
+                    data[c].append(float(row[c]))
+                except (ValueError, TypeError):
+                    data[c].append(None)
+    return {"columns": cols, "data": data}
+
+
+# --- Part 3 table ------------------------------------------------------------
+
+def per_protein_counts(run, k):
+    """For each real protein: (#exact_predictTopK True, total images)."""
+    rows = _read_exactn(run)
+    if not rows:
+        return {}
+    field = f"exact_predictTop{k}"
+    agg = {}
+    for r in rows:
+        # image column like "8DNM/1.png" -> protein prefix; protein col also present
+        prot = r.get("protein") or (r.get("image", "").split("/")[0])
+        if prot not in agg:
+            agg[prot] = [0, 0]
+        agg[prot][1] += 1
+        if _to_bool(r.get(field)):
+            agg[prot][0] += 1
+    return agg
+
+
+def part3_table(dataset, model, k=50):
+    """Protein (rows) x filter/run (cols) table of correct/total.
+
+    Column = each matching run (labelled by filter + smoothing).
+    """
+    runs = []
+    for run in list_runs():
+        meta = run_meta(run)
+        if meta["dataset"] != dataset:
+            continue
+        if model and (meta["model"] or "").lower() != model.lower():
+            continue
+        counts = per_protein_counts(run, k)
+        if not counts:
+            continue
+        label = meta["filter"] or "?"
+        if meta["smoothing"]:
+            label += f" ({meta['smoothing']})"
+        runs.append({
+            "run": run,
+            "label": label,
+            "filter": meta["filter"],
+            "smoothing": meta["smoothing"],
+            "counts": counts,
+        })
+    # union of proteins, real ones first in canonical order
+    proteins = list(config.REAL_PROTEINS)
+    extra = sorted({p for r in runs for p in r["counts"]} - set(proteins))
+    proteins += extra
+
+    columns = []
+    for r in runs:
+        total_correct = sum(v[0] for v in r["counts"].values())
+        total_imgs = sum(v[1] for v in r["counts"].values())
+        cells = {}
+        for prot in proteins:
+            c = r["counts"].get(prot)
+            cells[prot] = {"correct": c[0], "total": c[1]} if c else None
+        columns.append({
+            "run": r["run"],
+            "label": r["label"],
+            "filter": r["filter"],
+            "smoothing": r["smoothing"],
+            "total_correct": total_correct,
+            "total_images": total_imgs,
+            "cells": cells,
+        })
+    columns.sort(key=lambda c: (str(c["filter"]), c["smoothing"]))
+    return {"k": k, "proteins": proteins, "columns": columns}

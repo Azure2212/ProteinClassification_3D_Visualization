@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProteinClassification 3D · Visualization</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🧬 ProteinClassification&nbsp;3D <span>Visualization</span></div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="p1">1 · 12 Real Proteins</button>
+      <button class="tab" data-tab="p2">2 · Training Runs</button>
+      <button class="tab" data-tab="p3">3 · Summary Table</button>
+    </nav>
+  </header>
+
+  <!-- ===================== PART 1 ===================== -->
+  <section id="p1" class="panel active">
+    <div class="controls">
+      <div class="ctrl-group">
+        <label>Source</label>
+        <select id="p1-source-type">
+          <option value="render">Rendered (dataset × filter)</option>
+          <option value="testset">Professor test-set (real images)</option>
+        </select>
+      </div>
+      <div id="p1-render-fields" class="ctrl-inline">
+        <div class="ctrl-group"><label>Dataset</label><select id="p1-dataset"></select></div>
+        <div class="ctrl-group"><label>Filter</label><select id="p1-filter"></select></div>
+        <div class="ctrl-group"><label>Split</label>
+          <select id="p1-split">
+            <option value="train126">train126 (126 frames)</option>
+            <option value="test30">test30 (30 frames)</option>
+          </select>
+        </div>
+      </div>
+      <div id="p1-testset-fields" class="ctrl-inline" style="display:none">
+        <div class="ctrl-group"><label>Version</label>
+          <select id="p1-version">
+            <option value="origin">origin</option>
+            <option value="black">blackbackground</option>
+            <option value="sim">simulatedbackground</option>
+          </select>
+        </div>
+      </div>
+      <div class="ctrl-group"><label>Protein</label><select id="p1-protein"></select></div>
+      <button id="p1-add" class="primary">+ Add player</button>
+    </div>
+
+    <div class="controls sub">
+      <button id="p1-play-all">▶ Play all</button>
+      <button id="p1-pause-all">⏸ Pause all</button>
+      <button id="p1-clear" class="danger">✕ Clear</button>
+      <div class="ctrl-group grow">
+        <label>Default speed <span id="p1-speed-all-val">400ms</span></label>
+        <input id="p1-speed-all" type="range" min="80" max="1500" step="20" value="400">
+      </div>
+    </div>
+
+    <div id="p1-grid" class="grid"></div>
+  </section>
+
+  <!-- ===================== PART 2 ===================== -->
+  <section id="p2" class="panel">
+    <div class="p2-layout">
+      <aside class="p2-side">
+        <input id="p2-search" type="search" placeholder="filter runs…">
+        <div class="hint" id="p2-count"></div>
+        <div id="p2-runs" class="run-list"></div>
+      </aside>
+      <div class="p2-main">
+        <div id="p2-legend" class="legend"></div>
+        <div class="charts-row">
+          <div id="p2-chart-exact" class="chart"><div class="empty">select runs to plot</div></div>
+          <div id="p2-chart-sim" class="chart"></div>
+        </div>
+        <div id="p2-config" class="config-panel"><div class="empty">select a run to view its config.json</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PART 3 ===================== -->
+  <section id="p3" class="panel">
+    <div class="controls">
+      <div class="ctrl-group"><label>Dataset</label><select id="p3-dataset"></select></div>
+      <div class="ctrl-group"><label>Model</label><select id="p3-model"></select></div>
+      <div class="ctrl-group"><label>Top-k</label>
+        <select id="p3-k">
+          <option>1</option><option>3</option><option>5</option>
+          <option>10</option><option>20</option><option selected>50</option>
+        </select>
+      </div>
+      <div class="caption" id="p3-caption"></div>
+    </div>
+    <div id="p3-table-wrap" class="table-wrap"></div>
+  </section>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
