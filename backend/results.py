@@ -86,12 +86,24 @@ def _run_path(run, *parts):
     return target
 
 
+def _is_scratch_run(name):
+    """Demo/test scaffolding folders to hide from the UI (not real experiments).
+
+    Matches only names prefixed `_demo`/`_test` (e.g. `_demo_test_20260623`).
+    Real runs that merely lack a CSV (e.g. `11062026_..._mix3EMDB`) do NOT match
+    and stay listed with a "no chart data" flag.
+    """
+    low = name.lower()
+    return low.startswith("_demo") or low.startswith("_test")
+
+
 def list_runs():
     base = config.TRAINED_RESULTS_DIR
     if not os.path.isdir(base):
         return []
     return sorted(
-        n for n in os.listdir(base) if os.path.isdir(os.path.join(base, n))
+        n for n in os.listdir(base)
+        if os.path.isdir(os.path.join(base, n)) and not _is_scratch_run(n)
     )
 
 

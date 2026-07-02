@@ -42,31 +42,45 @@ async function toggleRun(meta, on) {
   if (on) {
     const color = colorFor(colorIdx++);
     selected.set(meta.run, { meta, curves: null, color });
-    try {
-      const c = await api.runCurves(meta.run);
-      selected.get(meta.run).curves = c.curves;
-    } catch (e) {
-      // e.g. run has no ExactNSimilarityCheckResult.csv -> /curves 404
-      selected.get(meta.run).error = e.message || "no chart data";
-    }
-    showConfig(meta.run);
+    // fetch curves + config in parallel; render as each resolves
+    const entry = selected.get(meta.run);
+    const jobs = [
+      api.runCurves(meta.run)
+        .then((c) => { entry.curves = c.curves; })
+        .catch((e) => { entry.error = e.message || "no chart data"; }),
+      api.runConfig(meta.run)
+        .then(({ config }) => { entry.config = config; })
+        .catch((e) => { entry.configError = e.message || "no config"; }),
+    ];
+    await Promise.all(jobs);
   } else {
     selected.delete(meta.run);
   }
   redraw();
 }
 
-async function showConfig(run) {
+// Render the config.json of EVERY selected run — one scrollable card each,
+// titled with the run name and colour-matched to its chart line.
+function renderConfigs() {
   const panel = $("#p2-config");
-  panel.innerHTML = `<div class="loading">loading config…</div>`;
-  try {
-    const { config } = await api.runConfig(run);
-    panel.innerHTML =
-      `<div class="config-head">config.json — <b>${run}</b></div>` +
-      `<pre class="config-json">${syntax(JSON.stringify(config, null, 2))}</pre>`;
-  } catch (e) {
-    panel.innerHTML = `<div class="err">no config for ${run}</div>`;
+  const runs = [...selected.values()];
+  if (!runs.length) {
+    panel.innerHTML = `<div class="empty">select a run to view its config.json</div>`;
+    return;
   }
+  panel.innerHTML = runs.map((s) => {
+    let body;
+    if (s.config) {
+      body = `<pre class="config-json">${syntax(JSON.stringify(s.config, null, 2))}</pre>`;
+    } else if (s.configError) {
+      body = `<div class="err">no config: ${s.configError}</div>`;
+    } else {
+      body = `<div class="loading">loading config…</div>`;
+    }
+    return `<div class="config-card">` +
+      `<div class="config-head"><i style="background:${s.color}"></i>` +
+      `config.json — <b>${s.meta.run}</b></div>${body}</div>`;
+  }).join("");
 }
 
 function syntax(json) {
@@ -79,6 +93,7 @@ function syntax(json) {
 }
 
 function redraw() {
+  renderConfigs();                 // show every selected run's config (not just one)
   const legend = $("#p2-legend");
   legend.innerHTML = "";
   const withCurves = [...selected.values()].filter((s) => s.curves);
