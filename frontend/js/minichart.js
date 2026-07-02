@@ -94,12 +94,13 @@ export function lineChart(container, { title, xLabels, series, yMax = 100, yLabe
   container.innerHTML = svg;
 }
 
-// Vertical bar chart (Part 5). bars: [{label, value, highlight}].
-// Highlighted bars are drawn in `highlightColor` (default red), others `baseColor`.
-// value shown above each visible bar; label under each bar (rotated).
+// Vertical bar chart (Part 5). bars: [{label, value, color?, highlight?}].
+// Each bar (and its value + rotated axis label) is drawn in `color` when given,
+// else `highlightColor` if `highlight` is true, else `baseColor`.
 export function barChart(container, {
-  title, bars, yLabel = "%", baseColor = "#1f6fe5", highlightColor = "#dc2626",
+  title, bars, yLabel = "%", baseColor = "#111827", highlightColor = "#dc2626",
 }) {
+  const barColor = (b) => b.color || (b.highlight ? highlightColor : baseColor);
   const n = bars.length;
   const slot = 30;                         // px per bar
   const m = { top: 30, right: 12, bottom: 62, left: 40 };
@@ -128,18 +129,17 @@ export function barChart(container, {
     const x = xAt(i);
     const y = yAt(b.value);
     const h = m.top + ph - y;
-    const color = b.highlight ? highlightColor : baseColor;
+    const color = barColor(b);
     svg += `<rect x="${x - bw / 2}" y="${y}" width="${bw}" height="${Math.max(0, h)}" `
-      + `rx="1.5" fill="${color}"><title>${esc(b.label)}: ${b.value}%`
-      + `${b.highlight ? " ★" : ""}</title></rect>`;
-    // value above bar (only where tall enough to avoid clutter)
+      + `rx="1.5" fill="${color}"><title>${esc(b.label)}: ${b.value}%</title></rect>`;
+    // value above bar (only where tall enough to avoid clutter), coloured to match
     if (b.value >= 0.5) {
       svg += `<text x="${x}" y="${y - 3}" text-anchor="middle" class="bar-val" `
         + `fill="${color}" stroke="#fff" stroke-width="2.4" paint-order="stroke">${b.value}</text>`;
     }
-    // rotated label under the axis
-    svg += `<text x="${x}" y="${m.top + ph + 12}" text-anchor="end" class="bar-lab`
-      + `${b.highlight ? " hl" : ""}" transform="rotate(-55 ${x} ${m.top + ph + 12})">`
+    // rotated label under the axis, coloured to match the bar
+    svg += `<text x="${x}" y="${m.top + ph + 12}" text-anchor="end" class="bar-lab" `
+      + `fill="${color}" transform="rotate(-55 ${x} ${m.top + ph + 12})">`
       + `${esc(b.label)}</text>`;
   });
 

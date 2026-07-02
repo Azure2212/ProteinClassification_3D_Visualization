@@ -27,7 +27,7 @@ function renderRunList() {
       : "";
     row.innerHTML = `
       <input type="checkbox" value="${r.run}" ${selected.has(r.run) ? "checked" : ""}>
-      <span class="run-name">${r.run}</span>
+      <span class="run-name" title="${r.run}">${r.run}</span>
       <span class="run-tag">${tag}${noData}</span>`;
     row.querySelector("input").addEventListener("change", (e) =>
       toggleRun(r, e.target.checked));

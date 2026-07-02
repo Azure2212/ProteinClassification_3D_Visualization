@@ -1,7 +1,7 @@
 // Part 5 — Prediction: pick a real protein + its real image(s) + a checkpoint
-// run, then run inference. Per image show the picture, an Exact-prediction bar
-// chart (is_exact bars red) and a Sequential-similarity bar chart (is_neighbor
-// bars red). Charts are the dependency-free SVG barChart from minichart.js.
+// run, then run inference. Per image show the picture and one top-20 bar chart
+// coloured 3 ways: red = exact (predicted == protein), blue = neighbor (>=30%
+// identity), black = unrelated. Uses the dependency-free SVG barChart.
 import { api } from "./api.js";
 import { barChart } from "./minichart.js";
 
@@ -87,7 +87,7 @@ function renderRuns() {
     const tag = [r.model, r.filter, r.smoothing].filter(Boolean).join(" · ");
     const warn = r.can_predict ? "" :
       ` <span class="run-nodata" title="No class_to_idx.json — this run can't be predicted">⚠ no class mapping</span>`;
-    row.innerHTML = `<span class="run-name">${r.run}</span>` +
+    row.innerHTML = `<span class="run-name" title="${r.run}">${r.run}</span>` +
       `<span class="run-tag">${tag}${warn}</span>`;
     row.addEventListener("click", () => { selectedRun = r.run; renderRuns(); status(); });
     box.appendChild(row);
@@ -123,15 +123,18 @@ async function runPrediction() {
       const unsupported = /unsupported|class_to_idx|class mapping/i.test(e.message);
       card.innerHTML = `<div class="pred-head"><b>${protein}/${name}</b></div>` +
         `<div class="err">${unsupported
-          ? "Run chưa hỗ trợ predict (thiếu class mapping / checkpoint)."
+          ? "This run does not support prediction (missing class mapping / checkpoint)."
           : "Prediction failed: " + e.message}</div>`;
     }
   }
 }
 
+// One chart per image, 3 colours: red = exact (predicted label == protein),
+// blue = neighbor (>=30% identity), black = unrelated. Labels match bar colour.
+const COL = { exact: "#dc2626", neighbor: "#1f6fe5", unrelated: "#111827" };
+
 function renderResult(card, r) {
   const imgUrl = (images.find((i) => r.image.endsWith(i.name)) || {}).url || "";
-  const rankTxt = r.exact_rank ? `top-1 rank ${r.exact_rank}` : "not in top-k";
   card.innerHTML = `
     <div class="pred-head">
       <b>${r.image}</b> · ${r.model} · ${r.n_classes} classes ·
@@ -143,19 +146,22 @@ function renderResult(card, r) {
         <div class="pred-name">${r.image}</div>
       </div>
       <div class="pred-charts">
-        <div class="pred-chart" data-c="exact"></div>
-        <div class="pred-chart" data-c="sim"></div>
+        <div class="pred-legend">
+          <span class="lg"><i style="background:${COL.exact}"></i>Exact prediction (predicted = ${r.protein})</span>
+          <span class="lg"><i style="background:${COL.neighbor}"></i>Neighbor (≥30% identity)</span>
+          <span class="lg"><i style="background:${COL.unrelated}"></i>Unrelated</span>
+        </div>
+        <div class="pred-chart" data-c="main"></div>
       </div>
     </div>`;
-  const exactBars = r.predictions.map((p) => ({ label: p.label, value: p.prob, highlight: p.is_exact }));
-  const simBars = r.predictions.map((p) => ({ label: p.label, value: p.prob, highlight: p.is_neighbor }));
-  barChart(card.querySelector('[data-c="exact"]'), {
-    title: `Exact prediction — top-${r.top_k} (red = correct class ${r.protein})`,
-    bars: exactBars,
-  });
-  barChart(card.querySelector('[data-c="sim"]'), {
-    title: `Sequential similarity — top-${r.top_k} (red = ≥30% neighbor of ${r.protein})`,
-    bars: simBars,
+  const bars = r.predictions.map((p) => ({
+    label: p.label,
+    value: p.prob,
+    color: p.is_exact ? COL.exact : (p.is_neighbor ? COL.neighbor : COL.unrelated),
+  }));
+  barChart(card.querySelector('[data-c="main"]'), {
+    title: `Top-${r.top_k} predicted classes for ${r.image}`,
+    bars,
   });
 }
 
