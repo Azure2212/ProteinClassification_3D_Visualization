@@ -4,6 +4,7 @@
 // identity), black = unrelated. Uses the dependency-free SVG barChart.
 import { api } from "./api.js";
 import { barChart } from "./minichart.js";
+import { pickConfigFields } from "./part2.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 
@@ -105,7 +106,7 @@ async function showConfig(run) {
     const { config } = await api.runConfig(run);
     panel.innerHTML = `<div class="config-card">` +
       `<div class="config-head">config.json — <b>${run}</b></div>` +
-      `<pre class="config-json p5-config-json">${syntax(JSON.stringify(config, null, 2))}</pre></div>`;
+      `<pre class="config-json p5-config-json">${syntax(JSON.stringify(pickConfigFields(config), null, 2))}</pre></div>`;
   } catch (e) {
     panel.innerHTML = `<div class="config-card"><div class="config-head">config.json — ` +
       `<b>${run}</b></div><div class="err">no config: ${e.message}</div></div>`;

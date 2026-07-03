@@ -66,7 +66,7 @@ const P2_CONFIG_FIELDS = [
   "valid_protein_path", "label_smoothing", "batch_size",
 ];
 
-function pickConfigFields(cfg) {
+export function pickConfigFields(cfg) {
   const out = {};
   P2_CONFIG_FIELDS.forEach((k) => {
     if (cfg && Object.prototype.hasOwnProperty.call(cfg, k)) out[k] = cfg[k];
