@@ -346,12 +346,15 @@ def topk_curves(run):
     return {"ks": EXACT_KS, "exact": exact, "similarity": sim, "total": total}
 
 
-# Columns from trainingTracking.csv used by the TRAINING PERFORMANCE charts
-# (Top-1 focus). Verified header:
-#   epoch,train_acc,train_loss,val_acc,val_loss,topk1train_acc,...,learning_rate
-TRAINING_COLUMNS = [
-    "topk1train_acc", "topk1val_acc", "learning_rate", "train_loss", "val_loss",
-]
+# Columns from trainingTracking.csv used by the TRAINING PERFORMANCE charts.
+# Verified: every run has topk{1,3,5,10,20}{train,val}_acc (NO top-50 in training),
+# plus learning_rate / train_loss / val_loss.
+TRAINING_TOPK = [1, 3, 5, 10, 20]
+TRAINING_COLUMNS = (
+    [f"topk{k}train_acc" for k in TRAINING_TOPK]
+    + [f"topk{k}val_acc" for k in TRAINING_TOPK]
+    + ["learning_rate", "train_loss", "val_loss"]
+)
 
 
 def training_series(run):
@@ -381,7 +384,10 @@ def training_series(run):
                     data[c].append(None)
     if not epochs:
         return None
-    return {"epochs": epochs, "series": data}
+    # only expose k's whose column is actually present in this run
+    topk = [k for k in TRAINING_TOPK
+            if any(v is not None for v in data.get(f"topk{k}train_acc", []))]
+    return {"epochs": epochs, "series": data, "topk": topk or TRAINING_TOPK}
 
 
 def real_test_tracking(run):

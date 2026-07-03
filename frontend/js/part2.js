@@ -142,20 +142,39 @@ function renderModalConfig() {
 
 function closeModal() { $("#p2-modal").hidden = true; modalCfg = null; }
 
-// Per-chart zoom by adjusting the SVG viewBox (keeps the SVG size fixed, shows a
-// zoomed sub-region). Wheel zooms around the cursor; +/- zoom from centre;
-// double-click or 1× resets. Zoom is clamped to [1x .. MAXZOOM] within bounds.
+// Right-drag pan shared across charts (window listeners registered once).
+let _pan = null;
+function _panMove(e) {
+  if (!_pan) return;
+  const r = _pan.svg.getBoundingClientRect();
+  const nx = _pan.svb[0] - (e.clientX - _pan.sx) / r.width * _pan.vb[2];
+  const ny = _pan.svb[1] - (e.clientY - _pan.sy) / r.height * _pan.vb[3];
+  _pan.vb[0] = Math.max(_pan.minX, Math.min(_pan.maxX, nx));
+  _pan.vb[1] = Math.max(_pan.minY, Math.min(_pan.maxY, ny));
+  _pan.apply();
+}
+let _panWired = false;
+function ensurePan() {
+  if (_panWired) return;
+  _panWired = true;
+  window.addEventListener("mousemove", _panMove);
+  window.addEventListener("mouseup", () => { _pan = null; });
+}
+
+// Per-chart zoom via the SVG viewBox (SVG stays the same size, shows a zoomed
+// sub-region). +/- zoom from centre; double-click or 1× resets. RIGHT-DRAG pans
+// the zoomed view (clamped to the data bounds). No wheel zoom. Clamp 1x..8x.
 function attachZoom(wrap, chartEl) {
   const svg = chartEl.querySelector("svg");
   if (!svg) return;
   const base = (svg.getAttribute("viewBox") || "0 0 460 300").split(/\s+/).map(Number);
   const [bx, by, bw, bh] = base;
-  const MIN_W = bw / 8;          // max zoom 8x
-  let vb = base.slice();
+  const MIN_W = bw / 8;                 // max zoom 8x
+  const vb = base.slice();              // mutated in place (stable reference)
   const apply = () => svg.setAttribute("viewBox", vb.join(" "));
   function zoomAround(factor, cx, cy) {
-    let nw = Math.max(MIN_W, Math.min(bw, vb[2] / factor));
-    let nh = nw * (bh / bw);
+    const nw = Math.max(MIN_W, Math.min(bw, vb[2] / factor));
+    const nh = nw * (bh / bw);
     vb[0] = cx - (cx - vb[0]) * (nw / vb[2]);
     vb[1] = cy - (cy - vb[1]) * (nh / vb[3]);
     vb[2] = nw; vb[3] = nh;
@@ -164,14 +183,16 @@ function attachZoom(wrap, chartEl) {
     apply();
   }
   const centre = (f) => zoomAround(f, vb[0] + vb[2] / 2, vb[1] + vb[3] / 2);
-  const reset = () => { vb = base.slice(); apply(); };
-  svg.addEventListener("wheel", (e) => {
+  const reset = () => { vb[0] = bx; vb[1] = by; vb[2] = bw; vb[3] = bh; apply(); };
+  // right-drag to pan; suppress the browser context menu
+  svg.addEventListener("contextmenu", (e) => e.preventDefault());
+  svg.addEventListener("mousedown", (e) => {
+    if (e.button !== 2) return;         // right button only
     e.preventDefault();
-    const r = svg.getBoundingClientRect();
-    const cx = vb[0] + (e.clientX - r.left) / r.width * vb[2];
-    const cy = vb[1] + (e.clientY - r.top) / r.height * vb[3];
-    zoomAround(e.deltaY < 0 ? 1.15 : 1 / 1.15, cx, cy);
-  }, { passive: false });
+    ensurePan();
+    _pan = { svg, vb, apply, sx: e.clientX, sy: e.clientY, svb: vb.slice(),
+      minX: bx, maxX: bx + bw - vb[2], minY: by, maxY: by + bh - vb[3] };
+  });
   svg.addEventListener("dblclick", reset);
   wrap.querySelector(".zoom-in").addEventListener("click", () => centre(1.3));
   wrap.querySelector(".zoom-out").addEventListener("click", () => centre(1 / 1.3));
@@ -214,18 +235,27 @@ function drawTraining() {
     };
 
     const common = { xLabels, showLabels: false, xAxisLabel: "epoch" };
+    // Top-k accuracy columns available in trainingTracking.csv (no top-50).
+    const availK = (runs[0].training && runs[0].training.topk) || [1, 3, 5, 10, 20];
     const specs = [
-      { title: "Top-1 train accuracy", series: series("topk1train_acc", 100), yMax: 100, yLabel: "%" },
-      { title: "Top-1 val accuracy", series: series("topk1val_acc", 100), yMax: 100, yLabel: "%" },
-      { title: "Learning rate", series: series("learning_rate"), yLabel: "lr" },
-      { title: "Train loss", series: series("train_loss"), yLabel: "loss" },
-      { title: "Val loss", series: series("val_loss"), yLabel: "loss" },
+      { acc: "train" },
+      { acc: "val" },
+      { col: "learning_rate", title: "Learning rate", yLabel: "lr" },
+      { col: "train_loss", title: "Train loss", yLabel: "loss" },
+      { col: "val_loss", title: "Val loss", yLabel: "loss" },
     ];
     grid.innerHTML = "";
     specs.forEach((sp) => {
       const wrap = document.createElement("div");
       wrap.className = "chart-zoom";
+      // accuracy charts get a Top-k dropdown, placed opposite the zoom buttons
+      const leftCtrl = sp.acc
+        ? `<div class="chart-ctrl-left"><select class="topk-sel" title="Top-k accuracy">` +
+            availK.map((k) => `<option value="${k}">Top-${k}</option>`).join("") +
+          `</select></div>`
+        : "";
       wrap.innerHTML =
+        leftCtrl +
         `<div class="chart"></div>` +
         `<div class="zoom-ctrl">` +
         `<button class="zbtn zoom-out" title="Zoom out">−</button>` +
@@ -233,11 +263,22 @@ function drawTraining() {
         `<button class="zbtn zoom-in" title="Zoom in">+</button></div>`;
       grid.appendChild(wrap);
       const chartEl = wrap.querySelector(".chart");
-      lineChart(chartEl, {
-        ...common, title: sp.title, series: sp.series,
-        yMax: sp.yMax != null ? sp.yMax : niceMax(sp.series), yLabel: sp.yLabel,
-      });
-      attachZoom(wrap, chartEl);
+      const paint = () => {
+        let title, ser, yMax, yLabel;
+        if (sp.acc) {
+          const k = Number(wrap.querySelector(".topk-sel").value);
+          title = `Top-${k} ${sp.acc} accuracy`;
+          ser = series(`topk${k}${sp.acc}_acc`, 100);
+          yMax = 100; yLabel = "%";
+        } else {
+          title = sp.title; ser = series(sp.col); yLabel = sp.yLabel;
+          yMax = niceMax(ser);
+        }
+        lineChart(chartEl, { ...common, title, series: ser, yMax, yLabel });
+        attachZoom(wrap, chartEl);   // re-attach (SVG replaced)
+      };
+      paint();
+      if (sp.acc) wrap.querySelector(".topk-sel").addEventListener("change", paint);
     });
   } catch (e) {
     grid.innerHTML = `<div class="err">training charts failed to render: ${e.message}</div>`;
