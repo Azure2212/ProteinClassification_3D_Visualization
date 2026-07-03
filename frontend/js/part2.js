@@ -142,6 +142,42 @@ function renderModalConfig() {
 
 function closeModal() { $("#p2-modal").hidden = true; modalCfg = null; }
 
+// Per-chart zoom by adjusting the SVG viewBox (keeps the SVG size fixed, shows a
+// zoomed sub-region). Wheel zooms around the cursor; +/- zoom from centre;
+// double-click or 1× resets. Zoom is clamped to [1x .. MAXZOOM] within bounds.
+function attachZoom(wrap, chartEl) {
+  const svg = chartEl.querySelector("svg");
+  if (!svg) return;
+  const base = (svg.getAttribute("viewBox") || "0 0 460 300").split(/\s+/).map(Number);
+  const [bx, by, bw, bh] = base;
+  const MIN_W = bw / 8;          // max zoom 8x
+  let vb = base.slice();
+  const apply = () => svg.setAttribute("viewBox", vb.join(" "));
+  function zoomAround(factor, cx, cy) {
+    let nw = Math.max(MIN_W, Math.min(bw, vb[2] / factor));
+    let nh = nw * (bh / bw);
+    vb[0] = cx - (cx - vb[0]) * (nw / vb[2]);
+    vb[1] = cy - (cy - vb[1]) * (nh / vb[3]);
+    vb[2] = nw; vb[3] = nh;
+    vb[0] = Math.max(bx, Math.min(bx + bw - nw, vb[0]));
+    vb[1] = Math.max(by, Math.min(by + bh - nh, vb[1]));
+    apply();
+  }
+  const centre = (f) => zoomAround(f, vb[0] + vb[2] / 2, vb[1] + vb[3] / 2);
+  const reset = () => { vb = base.slice(); apply(); };
+  svg.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = svg.getBoundingClientRect();
+    const cx = vb[0] + (e.clientX - r.left) / r.width * vb[2];
+    const cy = vb[1] + (e.clientY - r.top) / r.height * vb[3];
+    zoomAround(e.deltaY < 0 ? 1.15 : 1 / 1.15, cx, cy);
+  }, { passive: false });
+  svg.addEventListener("dblclick", reset);
+  wrap.querySelector(".zoom-in").addEventListener("click", () => centre(1.3));
+  wrap.querySelector(".zoom-out").addEventListener("click", () => centre(1 / 1.3));
+  wrap.querySelector(".zoom-reset").addEventListener("click", reset);
+}
+
 // --- charts ------------------------------------------------------------------
 function padTo(arr, n) {
   const out = arr.slice(0, n);
@@ -177,22 +213,32 @@ function drawTraining() {
       return mx <= 0 ? 1 : mx * 1.05;
     };
 
-    grid.innerHTML =
-      `<div class="chart" id="tc-tacc"></div><div class="chart" id="tc-vacc"></div>` +
-      `<div class="chart" id="tc-lr"></div>` +
-      `<div class="chart" id="tc-tloss"></div><div class="chart" id="tc-vloss"></div>`;
-
     const common = { xLabels, showLabels: false, xAxisLabel: "epoch" };
-    const tacc = series("topk1train_acc", 100);
-    const vacc = series("topk1val_acc", 100);
-    const lr = series("learning_rate");
-    const tloss = series("train_loss");
-    const vloss = series("val_loss");
-    lineChart($("#tc-tacc"), { ...common, title: "Top-1 train accuracy", series: tacc, yMax: 100, yLabel: "%" });
-    lineChart($("#tc-vacc"), { ...common, title: "Top-1 val accuracy", series: vacc, yMax: 100, yLabel: "%" });
-    lineChart($("#tc-lr"), { ...common, title: "Learning rate", series: lr, yMax: niceMax(lr), yLabel: "lr" });
-    lineChart($("#tc-tloss"), { ...common, title: "Train loss", series: tloss, yMax: niceMax(tloss), yLabel: "loss" });
-    lineChart($("#tc-vloss"), { ...common, title: "Val loss", series: vloss, yMax: niceMax(vloss), yLabel: "loss" });
+    const specs = [
+      { title: "Top-1 train accuracy", series: series("topk1train_acc", 100), yMax: 100, yLabel: "%" },
+      { title: "Top-1 val accuracy", series: series("topk1val_acc", 100), yMax: 100, yLabel: "%" },
+      { title: "Learning rate", series: series("learning_rate"), yLabel: "lr" },
+      { title: "Train loss", series: series("train_loss"), yLabel: "loss" },
+      { title: "Val loss", series: series("val_loss"), yLabel: "loss" },
+    ];
+    grid.innerHTML = "";
+    specs.forEach((sp) => {
+      const wrap = document.createElement("div");
+      wrap.className = "chart-zoom";
+      wrap.innerHTML =
+        `<div class="chart"></div>` +
+        `<div class="zoom-ctrl">` +
+        `<button class="zbtn zoom-out" title="Zoom out">−</button>` +
+        `<button class="zbtn zoom-reset" title="Reset (dbl-click chart)">1×</button>` +
+        `<button class="zbtn zoom-in" title="Zoom in">+</button></div>`;
+      grid.appendChild(wrap);
+      const chartEl = wrap.querySelector(".chart");
+      lineChart(chartEl, {
+        ...common, title: sp.title, series: sp.series,
+        yMax: sp.yMax != null ? sp.yMax : niceMax(sp.series), yLabel: sp.yLabel,
+      });
+      attachZoom(wrap, chartEl);
+    });
   } catch (e) {
     grid.innerHTML = `<div class="err">training charts failed to render: ${e.message}</div>`;
   }
