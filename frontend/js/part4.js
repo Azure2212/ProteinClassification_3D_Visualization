@@ -9,6 +9,27 @@ function esc(s) {
   return s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 }
 
+// Build gutter + content strings. With `ranges` (1-based inclusive line spans)
+// only those real lines are shown, keeping their original line numbers, with an
+// "omitted" separator between spans. Without ranges, the whole file is shown.
+function layout(content, ranges) {
+  const all = content.replace(/\n$/, "").split("\n");
+  if (!ranges || !ranges.length) {
+    return { gutter: all.map((_, n) => n + 1).join("\n"), body: esc(content) };
+  }
+  const g = [], b = [];
+  let prevEnd = null;
+  ranges.forEach(([s, e]) => {
+    if (prevEnd !== null) {
+      g.push("⋯");
+      b.push(`      ── lines ${prevEnd + 1}–${s - 1} omitted ──`);
+    }
+    for (let ln = s; ln <= e; ln++) { g.push(String(ln)); b.push(esc(all[ln - 1] ?? "")); }
+    prevEnd = e;
+  });
+  return { gutter: g.join("\n"), body: b.join("\n") };
+}
+
 // Fill one card's code box with the real script content (or an error).
 async function fillCode(card, spec) {
   const codeBox = card.querySelector(".code-box");
@@ -19,11 +40,10 @@ async function fillCode(card, spec) {
   }
   try {
     const { content } = await api.script(spec.file, spec.dir || "eman2");
-    const lines = content.replace(/\n$/, "").split("\n");
-    const gutter = lines.map((_, n) => n + 1).join("\n");
+    const { gutter, body } = layout(content, spec.ranges);
     codeBox.innerHTML =
       `<pre class="code-gutter">${gutter}</pre>` +
-      `<pre class="code-content"><code>${esc(content)}</code></pre>`;
+      `<pre class="code-content"><code>${body}</code></pre>`;
   } catch (e) {
     codeBox.innerHTML = `<div class="err">could not read ${spec.file}: ${e.message}</div>`;
   }
@@ -43,6 +63,7 @@ async function renderList(container, specs, mode) {
       <div class="script-head">
         ${badge}
         <code class="step-file">${s.dir === "viz" ? "sourceCode/visuallization/" : ""}${s.file}</code>
+        ${s.ranges ? `<span class="excerpt-note">excerpt · lines ${s.ranges.map((r) => `${r[0]}–${r[1]}`).join(", ")}</span>` : ""}
       </div>
       <div class="script-desc">${esc(s.desc)}</div>
       <div class="code-box"><div class="loading">loading ${s.file}…</div></div>`;

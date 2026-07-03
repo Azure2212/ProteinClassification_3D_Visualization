@@ -73,26 +73,38 @@ ADDITIONAL_SCRIPTS = [
         "title": "Apply filter (Gaussian lowpass)",
         "dir": "eman2",
         "file": "map2pngScript.py",
+        # excerpt: the .map->.hdf projection step + where the Gaussian filter is
+        # switched on (cutoff=1/N). NOT the whole 3-step workflow (that's Steps 1-3).
+        "ranges": [[40, 43], [65, 81], [105, 121]],
         "desc": "For .map inputs there is no pdb2mrc --res step, so resolution is "
-                "applied per projection as a Gaussian lowpass: "
-                "filter.lowpass.gauss:cutoff_freq = 1/<filter> (filter=1 = raw map, "
-                "baseline). \"filter N\" = the Gaussian smoothing level.",
+                "applied at the .mrc→.hdf projection as a Gaussian lowpass: "
+                "e2project3d --postprocess=filter.lowpass.gauss:cutoff_freq = 1/<filter> "
+                "(filter=1 = raw map, baseline). \"filter N\" = the Gaussian smoothing "
+                "level. Excerpt below shows only the projection + filter activation.",
     },
     {
         "title": "Apply frame-fill normalization",
         "dir": "eman2",
         "file": "_render_filter12_anorm.py",
+        # excerpt: the ndzoom frame-fill technique (constants, _place, and the
+        # scale = TARGET_FILL*BOX_OUT/D core), not the surrounding render boilerplate.
+        "ranges": [[29, 33], [47, 61], [76, 104]],
         "desc": "Frame-fill normalization: scipy.ndimage.zoom rescales each view so "
                 "the largest-diameter view fills TARGET_FILL = 0.40 of the frame "
-                "(other views stay proportionally smaller). Does NOT read apix.",
+                "(other views stay proportionally smaller). Does NOT read apix. "
+                "Excerpt shows the constants, _place() zoom, and the scale computation.",
     },
     {
         "title": "Apply Å (true angstrom) via e2proc3d",
         "dir": "eman2",
         "file": "_render_filter12_trueA_native.py",
+        # excerpt: the true-Å recipe docstring, apix read, and the e2proc3d
+        # resample step (Buoc A); not the shared projection/PNG steps.
+        "ranges": [[4, 11], [25, 31], [34, 47]],
         "desc": "True-Å recipe: e2proc3d resamples each map to a common apix with "
                 "math.fft.resample:n=APIX_OUT/native_apix, plus xform.centerofmass "
-                "and a fixed clip box — so a physical Å scale is preserved.",
+                "and a fixed clip box — so a physical Å scale is preserved. Excerpt "
+                "shows the recipe, apix read, and the resample step.",
     },
     {
         "title": "Neighbor JSON (≥ identity threshold per protein)",
