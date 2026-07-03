@@ -74,8 +74,12 @@ export function pickConfigFields(cfg) {
   return out;
 }
 
+// Runs whose config box is expanded to the FULL config (else the 6-field view).
+const expandedConfigs = new Set();
+
 // Render the config.json of EVERY selected run — one scrollable card each,
-// titled with the run name and colour-matched to its chart line.
+// titled with the run name and colour-matched to its chart line. Each card has
+// an independent Expand/Collapse toggle (6 fields <-> full config).
 function renderConfigs() {
   const panel = $("#p2-config");
   const runs = [...selected.values()];
@@ -84,9 +88,13 @@ function renderConfigs() {
     return;
   }
   panel.innerHTML = runs.map((s) => {
-    let body;
+    const run = s.meta.run;
+    const expanded = expandedConfigs.has(run);
+    let body, toggle = "";
     if (s.config) {
-      body = `<pre class="config-json">${syntax(JSON.stringify(pickConfigFields(s.config), null, 2))}</pre>`;
+      const obj = expanded ? s.config : pickConfigFields(s.config);
+      body = `<pre class="config-json">${syntax(JSON.stringify(obj, null, 2))}</pre>`;
+      toggle = `<button class="cfg-toggle" data-run="${run}">${expanded ? "Collapse" : "Expand"}</button>`;
     } else if (s.configError) {
       body = `<div class="err">no config: ${s.configError}</div>`;
     } else {
@@ -94,8 +102,15 @@ function renderConfigs() {
     }
     return `<div class="config-card">` +
       `<div class="config-head"><i style="background:${s.color}"></i>` +
-      `config.json — <b>${s.meta.run}</b></div>${body}</div>`;
+      `config.json — <b>${run}</b>${toggle}</div>${body}</div>`;
   }).join("");
+  panel.querySelectorAll(".cfg-toggle").forEach((b) =>
+    b.addEventListener("click", () => {
+      const run = b.dataset.run;
+      if (expandedConfigs.has(run)) expandedConfigs.delete(run);
+      else expandedConfigs.add(run);
+      renderConfigs();
+    }));
 }
 
 function syntax(json) {

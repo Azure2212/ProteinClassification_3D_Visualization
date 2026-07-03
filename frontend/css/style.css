@@ -116,6 +116,7 @@ button.danger:hover { border-color: var(--danger); color: #fca5a5; }
 .config-head { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; word-break: break-all; }
 .config-head i { width: 12px; height: 4px; border-radius: 2px; display: inline-block; flex: none; }
 .config-head b { color: var(--text); }
+.cfg-toggle { margin-left: auto; padding: 2px 10px; font-size: 11px; flex: none; }
 .config-json { margin: 0; font-family: ui-monospace, monospace; font-size: 12px; max-height: 120px; overflow: auto; white-space: pre; background: var(--code-bg); color: var(--code-text); border-radius: 8px; padding: 10px; }
 .config-json .k { color: #7dd3fc; } .config-json .s { color: #86efac; }
 .config-json .n { color: #fca5a5; } .config-json .b { color: #d8b4fe; }

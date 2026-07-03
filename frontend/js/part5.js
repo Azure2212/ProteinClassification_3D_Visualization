@@ -97,20 +97,37 @@ function renderRuns() {
   });
 }
 
-// Click a run -> show its configs.json in a scrollable navy code box (like Part 2).
+// Click a run -> show its configs.json in a scrollable navy code box (like Part 2),
+// defaulting to the 6-field view with an Expand/Collapse toggle to the full config.
+let p5cfg = null;   // {run, config, expanded}
+
 async function showConfig(run) {
   const panel = $("#p5-config");
   panel.innerHTML = `<div class="config-card"><div class="config-head">config.json — ` +
     `<b>${run}</b></div><div class="loading">loading config…</div></div>`;
   try {
     const { config } = await api.runConfig(run);
-    panel.innerHTML = `<div class="config-card">` +
-      `<div class="config-head">config.json — <b>${run}</b></div>` +
-      `<pre class="config-json p5-config-json">${syntax(JSON.stringify(pickConfigFields(config), null, 2))}</pre></div>`;
+    p5cfg = { run, config, expanded: false };
+    renderP5Config();
   } catch (e) {
+    p5cfg = null;
     panel.innerHTML = `<div class="config-card"><div class="config-head">config.json — ` +
       `<b>${run}</b></div><div class="err">no config: ${e.message}</div></div>`;
   }
+}
+
+function renderP5Config() {
+  if (!p5cfg) return;
+  const panel = $("#p5-config");
+  const obj = p5cfg.expanded ? p5cfg.config : pickConfigFields(p5cfg.config);
+  panel.innerHTML = `<div class="config-card">` +
+    `<div class="config-head">config.json — <b>${p5cfg.run}</b>` +
+    `<button class="cfg-toggle" id="p5-cfg-toggle">${p5cfg.expanded ? "Collapse" : "Expand"}</button></div>` +
+    `<pre class="config-json p5-config-json">${syntax(JSON.stringify(obj, null, 2))}</pre></div>`;
+  panel.querySelector("#p5-cfg-toggle").addEventListener("click", () => {
+    p5cfg.expanded = !p5cfg.expanded;
+    renderP5Config();
+  });
 }
 
 function syntax(json) {
