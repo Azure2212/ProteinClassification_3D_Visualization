@@ -147,6 +147,16 @@ button.danger:hover { border-color: var(--danger); color: #fca5a5; }
 .grid { stroke: var(--line); stroke-width: 1; }
 .tick { fill: var(--muted); font-size: 10px; }
 .pt-label { font-size: 9px; font-weight: 700; paint-order: stroke; }
+/* floating chart tooltip */
+.chart-tt { position: fixed; z-index: 200; pointer-events: none; background: var(--code-bg); color: var(--code-text);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; font-size: 12px; line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(16,35,59,.4); max-width: 280px; }
+.chart-tt .tt-head { font-weight: 700; color: #fff; margin-bottom: 3px; }
+.chart-tt .tt-row { display: flex; align-items: center; gap: 7px; }
+.chart-tt .tt-row i { width: 11px; height: 3px; border-radius: 2px; display: inline-block; flex: none; }
+.chart-tt .tt-lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #a9c2e0; }
+.chart-tt .tt-row b { color: #e6eefc; }
+.chart-tt .tt-near .tt-lbl, .chart-tt .tt-near b { color: #fff; font-weight: 700; }
 /* hover-highlight of a run's series across all Part 2 charts */
 .series-line, .series-dot, .pt-label { transition: opacity .12s, stroke-width .12s; }
 .series-dim { opacity: .12; }

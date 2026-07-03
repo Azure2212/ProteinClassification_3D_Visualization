@@ -82,8 +82,7 @@ export function lineChart(container, {
     s.values.forEach((v, i) => {
       if (v == null) return;
       const r = n > 30 ? 1.6 : 3;      // smaller dots on dense epoch charts
-      svg += `<circle class="series-dot"${dr} cx="${xAt(i)}" cy="${yAt(v)}" r="${r}" fill="${s.color}">`
-        + `<title>${esc(s.label)} — ${esc(xAxisLabel)} ${xLabels[i]}: ${fmtValue(v, yLabel)}${isPct ? "%" : ""}</title></circle>`;
+      svg += `<circle class="series-dot"${dr} cx="${xAt(i)}" cy="${yAt(v)}" r="${r}" fill="${s.color}"/>`;
     });
   });
 
@@ -116,6 +115,67 @@ export function lineChart(container, {
 
   svg += `</svg>`;
   container.innerHTML = svg;
+
+  const svgEl = container.querySelector("svg");
+  if (svgEl) attachTooltip(svgEl, { series, xLabels, xAt, yAt, yLabel, xAxisLabel, n });
+}
+
+// --- hover tooltip (shared floating div) --------------------------------------
+function ttFmt(v, yLabel) {
+  if (v == null) return "—";
+  const yl = String(yLabel);
+  if (yl.includes("%")) return `${(Math.round(v * 10) / 10).toFixed(1)}%`;
+  if (yl.includes("count")) return String(Math.round(v));
+  return fmtTick(v);
+}
+
+let _tt;
+function tooltipEl() {
+  if (!_tt) {
+    _tt = document.createElement("div");
+    _tt.className = "chart-tt";
+    _tt.style.display = "none";
+    document.body.appendChild(_tt);
+  }
+  return _tt;
+}
+
+// Reads the CURRENT viewBox each move, so it tracks zoom/pan. Finds the nearest
+// x column (epoch) and lists every series' value there, emphasizing the one whose
+// point is closest to the cursor.
+function attachTooltip(svg, ctx) {
+  const tt = tooltipEl();
+  svg.addEventListener("mousemove", (e) => {
+    const vb = (svg.getAttribute("viewBox") || "0 0 460 300").split(/\s+/).map(Number);
+    const r = svg.getBoundingClientRect();
+    if (!r.width || !r.height) { tt.style.display = "none"; return; }
+    const ux = vb[0] + (e.clientX - r.left) / r.width * vb[2];
+    const uy = vb[1] + (e.clientY - r.top) / r.height * vb[3];
+    let bi = 0, bd = Infinity;
+    for (let i = 0; i < ctx.n; i++) {
+      const d = Math.abs(ctx.xAt(i) - ux);
+      if (d < bd) { bd = d; bi = i; }
+    }
+    const rows = ctx.series.map((s) => ({ s, v: s.values[bi] })).filter((o) => o.v != null);
+    if (!rows.length) { tt.style.display = "none"; return; }
+    let near = rows[0], nd = Infinity;
+    rows.forEach((o) => { const d = Math.abs(ctx.yAt(o.v) - uy); if (d < nd) { nd = d; near = o; } });
+    let html = `<div class="tt-head">${esc(ctx.xAxisLabel)} ${esc(ctx.xLabels[bi])}</div>`;
+    rows.forEach((o) => {
+      html += `<div class="tt-row${o === near ? " tt-near" : ""}">` +
+        `<i style="background:${o.s.color}"></i>` +
+        `<span class="tt-lbl">${esc(o.s.label || o.s.run || "")}</span>` +
+        `<b>${esc(ttFmt(o.v, ctx.yLabel))}</b></div>`;
+    });
+    tt.innerHTML = html;
+    tt.style.display = "block";
+    let x = e.clientX + 14, y = e.clientY + 14;
+    if (x + tt.offsetWidth > window.innerWidth - 8) x = e.clientX - tt.offsetWidth - 14;
+    if (y + tt.offsetHeight > window.innerHeight - 8) y = e.clientY - tt.offsetHeight - 14;
+    tt.style.left = `${x}px`;
+    tt.style.top = `${y}px`;
+  });
+  svg.addEventListener("mouseleave", () => { tt.style.display = "none"; });
 }
 
 // Vertical bar chart (Part 5). bars: [{label, value, color?, highlight?}].
