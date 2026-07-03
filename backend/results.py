@@ -18,7 +18,7 @@ EXACT_KS = [1, 3, 5, 10, 20, 50]
 def _filter_num(label):
     """Leading integer of a filter label for numeric column ordering.
 
-    'filter6'->6, 'filter12_amstrong_Applied'->12, 'filter=14'->14.
+    'filter6'->6, 'filter12_framefill_Applied'->12, 'filter=14'->14.
     Labels with no number (e.g. 'without smoothing') sort last."""
     m = re.search(r"\d+", str(label or ""))
     return int(m.group(0)) if m else 1 << 30
@@ -190,8 +190,8 @@ def _detect_smoothing(run):
         return f"{m.group(1)}={m.group(2).replace('_', '.')}"
     if "mix3EMDB" in run or "mixEMDB" in run.lower():
         return "mixEMDB"
-    if "amstrong" in run:
-        return "amstrong"
+    if "framefill" in run:
+        return "framefill"
     return ""
 
 
