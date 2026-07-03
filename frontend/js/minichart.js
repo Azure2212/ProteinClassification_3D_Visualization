@@ -70,11 +70,15 @@ export function lineChart(container, {
   svg += `<text x="${m.left + pw / 2}" y="${H - 4}" text-anchor="middle" class="axis-label">${esc(xAxisLabel)}</text>`;
   svg += `<text x="12" y="${m.top + ph / 2}" text-anchor="middle" class="axis-label" transform="rotate(-90 12 ${m.top + ph / 2})">${esc(yLabel)}</text>`;
 
-  // series (lines + points)
+  // series (lines + points). null values (e.g. NaN loss epochs) are skipped so
+  // the line spans the gap instead of diving to 0, and no dot is drawn there.
   series.forEach((s) => {
-    const pts = s.values.map((v, i) => `${xAt(i)},${yAt(v)}`).join(" ");
+    const pts = s.values
+      .map((v, i) => (v == null ? null : `${xAt(i)},${yAt(v)}`))
+      .filter(Boolean).join(" ");
     svg += `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>`;
     s.values.forEach((v, i) => {
+      if (v == null) return;
       const r = n > 30 ? 1.6 : 3;      // smaller dots on dense epoch charts
       svg += `<circle cx="${xAt(i)}" cy="${yAt(v)}" r="${r}" fill="${s.color}">`
         + `<title>${esc(s.label)} — ${esc(xAxisLabel)} ${xLabels[i]}: ${fmtValue(v, yLabel)}${isPct ? "%" : ""}</title></circle>`;

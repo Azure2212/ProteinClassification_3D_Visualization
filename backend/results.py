@@ -6,6 +6,7 @@ artifact is missing the run is reported with `available: false` and empty series
 import os
 import csv
 import json
+import math
 import re
 import functools
 
@@ -370,8 +371,12 @@ def training_series(run):
             except (TypeError, ValueError):
                 continue
             for c in TRAINING_COLUMNS:
+                # NaN/Inf (e.g. diverged val_loss) -> null: Flask would otherwise
+                # emit literal NaN/Infinity, which is invalid JSON and makes the
+                # browser's strict response.json() throw (the whole run then drops).
                 try:
-                    data[c].append(float(row.get(c)))
+                    v = float(row.get(c))
+                    data[c].append(v if math.isfinite(v) else None)
                 except (TypeError, ValueError):
                     data[c].append(None)
     if not epochs:
