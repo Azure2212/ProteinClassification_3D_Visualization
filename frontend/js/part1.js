@@ -115,7 +115,7 @@ function currentDataset() {
 
 // Friendly label for a render-variant id (value stays the raw folder id).
 const FILTER_LABELS = {
-  "filter12_framefill_Applied": "filter12 frame-fill",
+  "filter12_framefill_Applied": "filter12 framefill",
   "filter12_trueA_12test": "filter12 trueA (ndzoom Python, apix=1.07) · 12 test only",
   "filter12_trueA_ownApix_12test": "filter12 trueA (own apix per protein) · 12 test only",
 };
