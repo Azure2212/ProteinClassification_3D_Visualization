@@ -115,18 +115,87 @@ function syntax(json) {
     .replace(/\b(-?\d+\.?\d*(e[-+]?\d+)?)\b/gi, `<span class="n">$1</span>`);
 }
 
-// --- run details dialog (config 6-fields + Expand) ---------------------------
+// --- run details dialog (Description + config 6-fields + Expand) -------------
 let modalCfg = null;   // {run, config, expanded, configError}
+
+const escHtml = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+// Human-readable summary generated from the run's configs.json (+ run name for
+// the hard/our smoothing type, which is NOT stored in the config). Missing
+// fields are skipped, never invented.
+function describeRun(run, cfg) {
+  if (!cfg) return `<span class="muted">config unavailable</span>`;
+  const rows = [];
+  const model = cfg.model || cfg.arch || cfg.model_name;
+  if (model) rows.push(["Model", escHtml(model)]);
+
+  // Dataset (from train/valid paths)
+  const tp = cfg.train_protein_path || "";
+  const vp = cfg.valid_protein_path || "";
+  if (tp) {
+    const source = /3D_MAP_4885/.test(tp) ? "EMDB density maps (.MAP)"
+      : /3D_PDB_5013/.test(tp) ? "PDB structures" : "images";
+    const filt = (tp.match(/filter(\d+)/) || [])[1];
+    const proc = /framefill/i.test(tp) ? "frame-fill normalization"
+      : /trueA_native/i.test(tp) ? "true-Å (native e2proc3d resample)"
+      : /trueA_ownApix/i.test(tp) ? "true-Å (own apix per protein)"
+      : /trueA/i.test(tp) ? "true-Å (ndzoom)"
+      : "no extra normalization";
+    const trainN = (tp.match(/PNG(\d+)/) || [])[1];
+    const validN = (vp.match(/PNG(\d+)/) || [])[1];
+    const validRnd = /random/i.test(vp) ? " random" : "";
+    let ds = source + (filt ? `, Gaussian filter ${filt}` : "") + `, ${proc}`;
+    if (trainN || validN) {
+      ds += `; ${trainN ? `${trainN} renders/protein train` : ""}` +
+        `${validN ? `${trainN ? " + " : ""}${validN}${validRnd} renders/protein valid` : ""}`;
+    }
+    // (n_classes in configs is a stale dump value — omitted to avoid misleading)
+    rows.push(["Dataset", `<span class="src-note">from path</span> ${escHtml(ds)}`]);
+  }
+
+  // Real test set
+  const test = cfg.test_image_path || "";
+  const tv = /origin_Version/.test(test) ? "professor's 193 real test images (original)"
+    : /blackbackground/.test(test) ? "professor's 193 real test images (black background)"
+    : /simulatedbackground/.test(test) ? "professor's 193 real test images (simulated background)"
+    : test ? escHtml(test.split("/").slice(-2).join("/")) : "";
+  if (tv) rows.push(["Real test", tv]);
+
+  // Label smoothing (value from config; hard/our type inferred from run name)
+  const ls = cfg.label_smoothing;
+  let sm;
+  if (ls == null) sm = "n/a";
+  else if (Number(ls) === 0) sm = "OFF — no label smoothing";
+  else {
+    const kind = /hardSmoothing/i.test(run) ? "hard label smoothing"
+      : /ourSmoothing/i.test(run) ? "our label smoothing (NeighborSmoothingLoss)"
+      : "label smoothing";
+    sm = `${kind}, ε = ${ls} <span class="src-note">(type from run name)</span>`;
+  }
+  rows.push(["Label smoothing", sm]);
+
+  const misc = [];
+  if (cfg.max_epoch_num) misc.push(`${cfg.max_epoch_num} epochs`);
+  if (cfg.batch_size) misc.push(`batch ${cfg.batch_size}`);
+  if (misc.length) rows.push(["Training", misc.join(" · ")]);
+
+  return `<dl class="run-desc">` +
+    rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("") + `</dl>`;
+}
 
 async function openModal(run) {
   $("#p2-modal").hidden = false;
   $("#p2-modal-title").textContent = run;
+  $("#p2-modal-desc").innerHTML = `<span class="loading">loading…</span>`;
   $("#p2-modal-config").innerHTML = `<span class="loading">loading config…</span>`;
   modalCfg = { run, config: null, expanded: false };
   api.runConfig(run)
     .then(({ config }) => { modalCfg.config = config; })
     .catch((e) => { modalCfg.configError = e.message || "no config"; })
-    .finally(renderModalConfig);
+    .finally(() => {
+      $("#p2-modal-desc").innerHTML = describeRun(run, modalCfg.config);
+      renderModalConfig();
+    });
 }
 
 function renderModalConfig() {

@@ -127,6 +127,11 @@ button.danger:hover { border-color: var(--danger); color: #fca5a5; }
 .modal-body { padding: 14px 16px; overflow: auto; }
 .modal-sect-title { display: flex; align-items: center; gap: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 4px 0 6px; }
 .modal-sect-title:not(:first-child) { margin-top: 14px; }
+.run-desc-box { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.run-desc { margin: 0; display: grid; grid-template-columns: 130px 1fr; gap: 4px 12px; font-size: 13px; }
+.run-desc dt { color: var(--muted); font-weight: 600; }
+.run-desc dd { margin: 0; color: var(--text); }
+.run-desc .src-note { color: var(--muted); font-size: 11px; font-style: italic; }
 /* Expand button floated at the bottom-centre of the JSON code box */
 .modal-config-wrap { position: relative; }
 .cfg-expand-btn {
