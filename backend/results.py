@@ -379,21 +379,6 @@ def training_series(run):
     return {"epochs": epochs, "series": data}
 
 
-def read_run_log(run, max_bytes=80000):
-    """Return run.log content (read-only, tail-capped), or None if absent."""
-    p = _run_path(run, "run.log")
-    if not os.path.isfile(p):
-        return None
-    try:
-        with open(p, encoding="utf-8", errors="replace") as f:
-            txt = f.read()
-    except OSError:
-        return None
-    if len(txt) > max_bytes:
-        txt = "…(truncated — showing last %d KB)…\n" % (max_bytes // 1000) + txt[-max_bytes:]
-    return txt
-
-
 def real_test_tracking(run):
     """Per-epoch exact top-k counts from realTestTracking.csv (optional extra)."""
     p = _run_path(run, "realTestTracking.csv")

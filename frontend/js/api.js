@@ -24,7 +24,6 @@ export const api = {
   runConfig: (run) => getJSON(`/api/run/${encodeURIComponent(run)}/config`),
   runCurves: (run) => getJSON(`/api/run/${encodeURIComponent(run)}/curves`),
   runTraining: (run) => getJSON(`/api/run/${encodeURIComponent(run)}/training`),
-  runLog: (run) => getJSON(`/api/run/${encodeURIComponent(run)}/log`),
   part3: (dataset, model, k, metric = "exact") =>
     getJSON(`/api/part3?dataset=${dataset}&model=${encodeURIComponent(model)}&k=${k}&metric=${metric}`),
   scripts: () => getJSON("/api/scripts"),

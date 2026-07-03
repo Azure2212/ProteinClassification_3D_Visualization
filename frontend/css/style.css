@@ -116,7 +116,15 @@ button.danger:hover { border-color: var(--danger); color: #fca5a5; }
 .modal-body { padding: 14px 16px; overflow: auto; }
 .modal-sect-title { display: flex; align-items: center; gap: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 4px 0 6px; }
 .modal-sect-title:not(:first-child) { margin-top: 14px; }
-.modal-log { max-height: 300px; }
+/* Expand button floated at the bottom-centre of the JSON code box */
+.modal-config-wrap { position: relative; }
+.cfg-expand-btn {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+  padding: 8px 26px; font-size: 13px; font-weight: 700;
+  background: var(--accent); color: #fff; border: 1px solid var(--accent-dark);
+  border-radius: 9px; box-shadow: 0 3px 10px rgba(16,35,59,.4); cursor: pointer;
+}
+.cfg-expand-btn:hover { background: var(--accent-dark); }
 .chart { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px; min-height: 300px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
 .chart-svg { width: 100%; height: auto; }
 .chart-title { fill: var(--text); font-size: 13px; font-weight: 600; }

@@ -1,8 +1,8 @@
 // Part 2 — Training Runs. Two sections per selected run set:
 //   REAL PERFORMANCE     — the two Top-k charts on the 193 held-out test images.
 //   TRAINING PERFORMANCE — per-epoch curves from trainingTracking.csv (Top-1).
-// A per-run "View" button opens a dialog with the config (6 fields + Expand) and
-// run.log. Each selected run is one coloured line across every chart.
+// A per-run "View" button opens a dialog with the config (6 fields + Expand).
+// Each selected run is one coloured line across every chart.
 import { api } from "./api.js";
 import { lineChart, colorFor } from "./minichart.js";
 
@@ -96,22 +96,18 @@ function syntax(json) {
     .replace(/\b(-?\d+\.?\d*(e[-+]?\d+)?)\b/gi, `<span class="n">$1</span>`);
 }
 
-// --- run details dialog (config 6-fields + Expand, and run.log) --------------
+// --- run details dialog (config 6-fields + Expand) ---------------------------
 let modalCfg = null;   // {run, config, expanded, configError}
 
 async function openModal(run) {
   $("#p2-modal").hidden = false;
   $("#p2-modal-title").textContent = run;
   $("#p2-modal-config").innerHTML = `<span class="loading">loading config…</span>`;
-  $("#p2-modal-log").textContent = "loading log…";
   modalCfg = { run, config: null, expanded: false };
   api.runConfig(run)
     .then(({ config }) => { modalCfg.config = config; })
     .catch((e) => { modalCfg.configError = e.message || "no config"; })
     .finally(renderModalConfig);
-  api.runLog(run)
-    .then(({ log }) => { $("#p2-modal-log").textContent = log; })
-    .catch(() => { $("#p2-modal-log").textContent = "(no run.log for this run)"; });
 }
 
 function renderModalConfig() {
