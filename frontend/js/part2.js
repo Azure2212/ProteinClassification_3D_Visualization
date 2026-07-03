@@ -59,6 +59,21 @@ async function toggleRun(meta, on) {
   redraw();
 }
 
+// Only these config fields are shown in Part 2 (in this order). Missing keys are
+// skipped (never invented). Part 5 still shows the full config.
+const P2_CONFIG_FIELDS = [
+  "model", "test_image_path", "train_protein_path",
+  "valid_protein_path", "label_smoothing", "batch_size",
+];
+
+function pickConfigFields(cfg) {
+  const out = {};
+  P2_CONFIG_FIELDS.forEach((k) => {
+    if (cfg && Object.prototype.hasOwnProperty.call(cfg, k)) out[k] = cfg[k];
+  });
+  return out;
+}
+
 // Render the config.json of EVERY selected run — one scrollable card each,
 // titled with the run name and colour-matched to its chart line.
 function renderConfigs() {
@@ -71,7 +86,7 @@ function renderConfigs() {
   panel.innerHTML = runs.map((s) => {
     let body;
     if (s.config) {
-      body = `<pre class="config-json">${syntax(JSON.stringify(s.config, null, 2))}</pre>`;
+      body = `<pre class="config-json">${syntax(JSON.stringify(pickConfigFields(s.config), null, 2))}</pre>`;
     } else if (s.configError) {
       body = `<div class="err">no config: ${s.configError}</div>`;
     } else {
