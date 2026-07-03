@@ -59,9 +59,7 @@ def list_filters(dataset):
             continue
         if name.startswith(prefix):
             out.append(name[len(prefix):])
-    # keep only the whitelisted filters (hide amstrong/trueA/15… variants)
-    allowed = set(config.ALLOWED_FILTERS)
-    out = [f for f in out if f in allowed]
+    # list every real render variant on disk (numeric filter first, then suffix)
     return sorted(out, key=_filter_sort_key)
 
 

@@ -111,6 +111,15 @@ function currentDataset() {
   return META.datasets.find((d) => d.key === $("#p1-dataset").value);
 }
 
+// Friendly label for a render-variant id (value stays the raw folder id).
+function filterLabel(f) {
+  return f.replace(/_/g, " ")
+    .replace(/amstrong Applied/i, "amstrong (frame-fill)")
+    .replace(/trueA native/i, "trueA (native Å)")
+    .replace(/trueA ownApix/i, "trueA (own apix)")
+    .replace(/12test/i, "· 12 test only");
+}
+
 function refreshFilters() {
   // Rebuild the multi-select checkbox panel (filters already numeric-sorted by API).
   const ds = currentDataset();
@@ -119,7 +128,7 @@ function refreshFilters() {
   ds.filters.forEach((f) => {
     const row = document.createElement("label");
     row.className = "ms-item";
-    row.innerHTML = `<input type="checkbox" value="${f}"> <span>${f}</span>`;
+    row.innerHTML = `<input type="checkbox" value="${f}"> <span title="${f}">${filterLabel(f)}</span>`;
     row.querySelector("input").addEventListener("change", updateFilterToggleLabel);
     panel.appendChild(row);
   });
@@ -214,14 +223,21 @@ async function loadFrames(p) {
       ? await api.framesTestset(spec.version, spec.protein)
       : await api.framesRender(spec.dataset, spec.filter, spec.split, spec.protein);
     p.frames = res.frames;
-    if (!p.frames.length) throw new Error("no frames");
+    if (!p.frames.length) throw new Error("__noimg__");
     stage.innerHTML = `<img class="player-img" alt="${spec.protein}">`;
     p.img = stage.querySelector(".player-img");
     p.idx = 0;
     render(p);
     if (p.playing) start(p); else stop(p);
   } catch (e) {
-    stage.innerHTML = `<div class="err">error: ${e.message}</div>`;
+    // missing protein in this variant (e.g. trueA renders only the 12 test
+    // proteins) or empty render -> tidy message instead of a raw error/crash.
+    const noImg = e.message === "__noimg__" ||
+      /not found|no such|no .*folder|does not exist|404/i.test(e.message || "");
+    stage.innerHTML = noImg
+      ? `<div class="err">no images for ${spec.protein} in this variant</div>`
+      : `<div class="err">error: ${e.message}</div>`;
+    stop(p);
   }
 }
 
