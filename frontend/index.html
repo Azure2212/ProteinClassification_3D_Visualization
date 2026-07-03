@@ -98,14 +98,35 @@
       </aside>
       <div class="p2-main">
         <div id="p2-legend" class="legend"></div>
+
+        <h3 class="p2-section-title">REAL PERFORMANCE <small>— professor's held-out 193 test images</small></h3>
         <div class="charts-row">
           <div id="p2-chart-exact" class="chart"><div class="empty">select runs to plot</div></div>
           <div id="p2-chart-sim" class="chart"></div>
         </div>
-        <div id="p2-config" class="config-panel"><div class="empty">select a run to view its config.json</div></div>
+
+        <h3 class="p2-section-title">TRAINING PERFORMANCE <small>— per epoch, from trainingTracking.csv (Top-1)</small></h3>
+        <div id="p2-train-grid" class="charts-grid"><div class="empty">select runs to plot</div></div>
       </div>
     </div>
   </section>
+
+  <!-- Run details dialog (opened by a run's "View" button) -->
+  <div id="p2-modal" class="modal" hidden>
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <b id="p2-modal-title">run</b>
+        <button id="p2-modal-close" class="modal-x" title="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-sect-title">configs.json <button id="p2-modal-expand" class="cfg-toggle">Expand</button></div>
+        <pre id="p2-modal-config" class="config-json p5-config-json"></pre>
+        <div class="modal-sect-title">run.log</div>
+        <pre id="p2-modal-log" class="config-json modal-log"></pre>
+      </div>
+    </div>
+  </div>
 
   <!-- ===================== PART 3 ===================== -->
   <section id="p3" class="panel">

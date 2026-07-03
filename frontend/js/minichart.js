@@ -25,16 +25,29 @@ function fmtValue(v, yLabel) {
   return Number.isInteger(v) ? String(v) : String(Math.round(v));
 }
 
+// Format a y-axis tick compactly (handles %, tiny lr, and large loss values).
+function fmtTick(v) {
+  if (v === 0) return "0";
+  const a = Math.abs(v);
+  if (a < 0.001 || a >= 100000) return v.toExponential(1);
+  return String(Math.round(v * 1000) / 1000);
+}
+
 // xLabels: array of category labels (e.g. [1,3,5,10,20,50]) shared by all series.
-// series[i].values aligns with xLabels.
-export function lineChart(container, { title, xLabels, series, yMax = 100, yLabel = "%", showLabels = true }) {
+// series[i].values aligns with xLabels. xAxisLabel names the x axis; showLabels
+// draws per-point value labels (turn OFF for many-point epoch charts).
+export function lineChart(container, {
+  title, xLabels, series, yMax = 100, yLabel = "%",
+  showLabels = true, xAxisLabel = "Top-k",
+}) {
   const W = 460, H = 300;
   const m = { top: 34, right: 14, bottom: 40, left: 44 };
   const pw = W - m.left - m.right;
   const ph = H - m.top - m.bottom;
   const n = xLabels.length;
   const xAt = (i) => m.left + (n === 1 ? pw / 2 : (pw * i) / (n - 1));
-  const yAt = (v) => m.top + ph - (ph * Math.max(0, Math.min(yMax, v))) / yMax;
+  const yAt = (v) => m.top + ph - (ph * Math.max(0, Math.min(yMax, v || 0))) / yMax;
+  const isPct = String(yLabel).includes("%");
 
   let svg = `<svg viewBox="0 0 ${W} ${H}" class="chart-svg" role="img" aria-label="${esc(title)}">`;
   svg += `<text x="${W / 2}" y="18" text-anchor="middle" class="chart-title">${esc(title)}</text>`;
@@ -45,14 +58,16 @@ export function lineChart(container, { title, xLabels, series, yMax = 100, yLabe
     const v = (yMax * t) / ticks;
     const y = yAt(v);
     svg += `<line x1="${m.left}" y1="${y}" x2="${W - m.right}" y2="${y}" class="grid"/>`;
-    svg += `<text x="${m.left - 6}" y="${y + 3}" text-anchor="end" class="tick">${v}</text>`;
+    svg += `<text x="${m.left - 6}" y="${y + 3}" text-anchor="end" class="tick">${fmtTick(v)}</text>`;
   }
-  // x labels
+  // x labels — thin out when there are many (e.g. epochs) to avoid crowding
+  const step = Math.max(1, Math.ceil(n / 12));
   xLabels.forEach((lab, i) => {
+    if (i % step !== 0 && i !== n - 1) return;
     const x = xAt(i);
     svg += `<text x="${x}" y="${H - m.bottom + 16}" text-anchor="middle" class="tick">${esc(lab)}</text>`;
   });
-  svg += `<text x="${m.left + pw / 2}" y="${H - 4}" text-anchor="middle" class="axis-label">Top-k</text>`;
+  svg += `<text x="${m.left + pw / 2}" y="${H - 4}" text-anchor="middle" class="axis-label">${esc(xAxisLabel)}</text>`;
   svg += `<text x="12" y="${m.top + ph / 2}" text-anchor="middle" class="axis-label" transform="rotate(-90 12 ${m.top + ph / 2})">${esc(yLabel)}</text>`;
 
   // series (lines + points)
@@ -60,8 +75,9 @@ export function lineChart(container, { title, xLabels, series, yMax = 100, yLabe
     const pts = s.values.map((v, i) => `${xAt(i)},${yAt(v)}`).join(" ");
     svg += `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>`;
     s.values.forEach((v, i) => {
-      svg += `<circle cx="${xAt(i)}" cy="${yAt(v)}" r="3" fill="${s.color}">`
-        + `<title>${esc(s.label)} — Top-${xLabels[i]}: ${fmtValue(v, yLabel)}${String(yLabel).includes("%") ? "%" : ""}</title></circle>`;
+      const r = n > 30 ? 1.6 : 3;      // smaller dots on dense epoch charts
+      svg += `<circle cx="${xAt(i)}" cy="${yAt(v)}" r="${r}" fill="${s.color}">`
+        + `<title>${esc(s.label)} — ${esc(xAxisLabel)} ${xLabels[i]}: ${fmtValue(v, yLabel)}${isPct ? "%" : ""}</title></circle>`;
     });
   });
 

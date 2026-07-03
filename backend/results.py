@@ -345,6 +345,55 @@ def topk_curves(run):
     return {"ks": EXACT_KS, "exact": exact, "similarity": sim, "total": total}
 
 
+# Columns from trainingTracking.csv used by the TRAINING PERFORMANCE charts
+# (Top-1 focus). Verified header:
+#   epoch,train_acc,train_loss,val_acc,val_loss,topk1train_acc,...,learning_rate
+TRAINING_COLUMNS = [
+    "topk1train_acc", "topk1val_acc", "learning_rate", "train_loss", "val_loss",
+]
+
+
+def training_series(run):
+    """Per-epoch training curves from trainingTracking.csv, or None if absent.
+
+    Returns {'epochs': [...], 'series': {col: [floats/None ...]}}. Accuracy cols
+    are fractions (0..1); loss/lr are raw. Nothing is invented.
+    """
+    p = _run_path(run, "trainingTracking.csv")
+    if not os.path.isfile(p):
+        return None
+    epochs, data = [], {c: [] for c in TRAINING_COLUMNS}
+    with open(p, newline="") as f:
+        for row in csv.DictReader(f):
+            try:
+                epochs.append(int(float(row.get("epoch"))))
+            except (TypeError, ValueError):
+                continue
+            for c in TRAINING_COLUMNS:
+                try:
+                    data[c].append(float(row.get(c)))
+                except (TypeError, ValueError):
+                    data[c].append(None)
+    if not epochs:
+        return None
+    return {"epochs": epochs, "series": data}
+
+
+def read_run_log(run, max_bytes=80000):
+    """Return run.log content (read-only, tail-capped), or None if absent."""
+    p = _run_path(run, "run.log")
+    if not os.path.isfile(p):
+        return None
+    try:
+        with open(p, encoding="utf-8", errors="replace") as f:
+            txt = f.read()
+    except OSError:
+        return None
+    if len(txt) > max_bytes:
+        txt = "…(truncated — showing last %d KB)…\n" % (max_bytes // 1000) + txt[-max_bytes:]
+    return txt
+
+
 def real_test_tracking(run):
     """Per-epoch exact top-k counts from realTestTracking.csv (optional extra)."""
     p = _run_path(run, "realTestTracking.csv")

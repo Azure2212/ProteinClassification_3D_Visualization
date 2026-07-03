@@ -144,6 +144,24 @@ def api_run_curves(run):
     return jsonify({"meta": results.run_meta(run), "curves": curves})
 
 
+@app.route("/api/run/<run>/training")
+def api_run_training(run):
+    """Per-epoch training curves from trainingTracking.csv (TRAINING PERFORMANCE)."""
+    t = results.training_series(run)
+    if t is None:
+        return jsonify({"error": "no trainingTracking.csv"}), 404
+    return jsonify({"meta": results.run_meta(run), **t})
+
+
+@app.route("/api/run/<run>/log")
+def api_run_log(run):
+    """Read-only run.log content for the run details dialog."""
+    log = results.read_run_log(run)
+    if log is None:
+        return jsonify({"error": "no run.log"}), 404
+    return jsonify({"log": log})
+
+
 # --- Part 3: table -----------------------------------------------------------
 @app.route("/api/part3")
 def api_part3():
