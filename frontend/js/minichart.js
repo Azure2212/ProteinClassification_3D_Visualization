@@ -38,7 +38,7 @@ function fmtTick(v) {
 // draws per-point value labels (turn OFF for many-point epoch charts).
 export function lineChart(container, {
   title, xLabels, series, yMax = 100, yLabel = "%",
-  showLabels = true, xAxisLabel = "Top-k",
+  showLabels = true, xAxisLabel = "Top-k", intTicks = false,
 }) {
   const W = 460, H = 300;
   const m = { top: 34, right: 14, bottom: 40, left: 44 };
@@ -58,7 +58,7 @@ export function lineChart(container, {
     const v = (yMax * t) / ticks;
     const y = yAt(v);
     svg += `<line x1="${m.left}" y1="${y}" x2="${W - m.right}" y2="${y}" class="grid"/>`;
-    svg += `<text x="${m.left - 6}" y="${y + 3}" text-anchor="end" class="tick">${fmtTick(v)}</text>`;
+    svg += `<text x="${m.left - 6}" y="${y + 3}" text-anchor="end" class="tick">${intTicks ? Math.round(v) : fmtTick(v)}</text>`;
   }
   // x labels — thin out when there are many (e.g. epochs) to avoid crowding
   const step = Math.max(1, Math.ceil(n / 12));

@@ -280,7 +280,7 @@ function drawTraining() {
       grid.appendChild(wrap);
       const chartEl = wrap.querySelector(".chart");
       const paint = () => {
-        let title, ser, yMax, yLabel, xl = xLabels;
+        let title, ser, yMax, yLabel, xl = xLabels, intTicks = false;
         if (sp.acc) {
           const k = Number(wrap.querySelector(".topk-sel").value);
           title = `Top-${k} ${sp.acc} accuracy`;
@@ -289,11 +289,14 @@ function drawTraining() {
         } else if (sp.realtest) {
           const k = Number(wrap.querySelector(".topk-sel").value);
           title = `Real test — top-${k} correct / epoch`;
-          ser = rtSeries(k); xl = rtXLabels; yLabel = "count"; yMax = niceMax(ser);
+          ser = rtSeries(k); xl = rtXLabels; yLabel = "count / 193";
+          // integer counts -> round yMax up to a multiple of 5 and use integer ticks
+          yMax = Math.max(5, Math.ceil(niceMax(ser) / 5) * 5);
+          intTicks = true;
         } else {
           title = sp.title; ser = series(sp.col); yLabel = sp.yLabel; yMax = niceMax(ser);
         }
-        lineChart(chartEl, { xLabels: xl, showLabels: false, xAxisLabel: "epoch", title, series: ser, yMax, yLabel });
+        lineChart(chartEl, { xLabels: xl, showLabels: false, xAxisLabel: "epoch", title, series: ser, yMax, yLabel, intTicks });
         attachZoom(wrap, chartEl);   // re-attach (SVG replaced)
       };
       paint();
