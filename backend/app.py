@@ -20,16 +20,25 @@ app = Flask(__name__, static_folder=None)
 
 
 # --- Frontend ----------------------------------------------------------------
+# The frontend is served with no-cache so browsers always pick up the latest
+# HTML/JS/CSS (avoids stale cached modules after a redeploy).
+def _no_cache(resp):
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
+
 @app.route("/")
 def index():
-    return send_from_directory(FRONTEND_DIR, "index.html")
+    return _no_cache(send_from_directory(FRONTEND_DIR, "index.html"))
 
 
 @app.route("/<path:path>")
 def static_files(path):
     full = os.path.join(FRONTEND_DIR, path)
     if os.path.isfile(full):
-        return send_from_directory(FRONTEND_DIR, path)
+        return _no_cache(send_from_directory(FRONTEND_DIR, path))
     abort(404)
 
 

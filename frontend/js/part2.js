@@ -140,39 +140,50 @@ function padTo(arr, n) {
 
 function drawTraining() {
   const grid = $("#p2-train-grid");
-  const runs = [...selected.values()].filter((s) => s.training);
+  if (!grid) return;
+  const runs = [...selected.values()].filter((s) => s.training && s.training.series);
   if (!runs.length) {
     grid.innerHTML = `<div class="empty">select runs to plot</div>`;
     return;
   }
-  const maxLen = Math.max(...runs.map((s) => s.training.epochs.length));
-  const xLabels = Array.from({ length: maxLen }, (_, i) => i + 1);
-  const series = (col, scale = 1) => runs.map((s) => ({
-    label: runTag(s.meta),
-    color: s.color,
-    values: padTo(s.training.series[col].map((v) => (v == null ? null : v * scale)), maxLen),
-  }));
-  const niceMax = (ss) => {
-    const mx = Math.max(0, ...ss.flatMap((s) => s.values.filter((v) => v != null)));
-    return mx <= 0 ? 1 : mx * 1.05;
-  };
+  try {
+    const maxLen = runs.reduce((mx, s) => Math.max(mx, (s.training.epochs || []).length), 0);
+    const xLabels = Array.from({ length: maxLen }, (_, i) => i + 1);
+    // one series per run for a column (missing/short columns -> nulls, never throw)
+    const series = (col, scale = 1) => runs.map((s) => {
+      const raw = Array.isArray(s.training.series[col]) ? s.training.series[col] : [];
+      return {
+        label: runTag(s.meta),
+        color: s.color,
+        values: padTo(raw.map((v) => (v == null ? null : v * scale)), maxLen),
+      };
+    });
+    // max over all values without spreading a big array (avoids arg-count limits)
+    const niceMax = (ss) => {
+      let mx = 0;
+      ss.forEach((s) => s.values.forEach((v) => { if (v != null && v > mx) mx = v; }));
+      return mx <= 0 ? 1 : mx * 1.05;
+    };
 
-  grid.innerHTML =
-    `<div class="chart" id="tc-tacc"></div><div class="chart" id="tc-vacc"></div>` +
-    `<div class="chart" id="tc-lr"></div>` +
-    `<div class="chart" id="tc-tloss"></div><div class="chart" id="tc-vloss"></div>`;
+    grid.innerHTML =
+      `<div class="chart" id="tc-tacc"></div><div class="chart" id="tc-vacc"></div>` +
+      `<div class="chart" id="tc-lr"></div>` +
+      `<div class="chart" id="tc-tloss"></div><div class="chart" id="tc-vloss"></div>`;
 
-  const common = { xLabels, showLabels: false, xAxisLabel: "epoch" };
-  const tacc = series("topk1train_acc", 100);
-  const vacc = series("topk1val_acc", 100);
-  const lr = series("learning_rate");
-  const tloss = series("train_loss");
-  const vloss = series("val_loss");
-  lineChart($("#tc-tacc"), { ...common, title: "Top-1 train accuracy", series: tacc, yMax: 100, yLabel: "%" });
-  lineChart($("#tc-vacc"), { ...common, title: "Top-1 val accuracy", series: vacc, yMax: 100, yLabel: "%" });
-  lineChart($("#tc-lr"), { ...common, title: "Learning rate", series: lr, yMax: niceMax(lr), yLabel: "lr" });
-  lineChart($("#tc-tloss"), { ...common, title: "Train loss", series: tloss, yMax: niceMax(tloss), yLabel: "loss" });
-  lineChart($("#tc-vloss"), { ...common, title: "Val loss", series: vloss, yMax: niceMax(vloss), yLabel: "loss" });
+    const common = { xLabels, showLabels: false, xAxisLabel: "epoch" };
+    const tacc = series("topk1train_acc", 100);
+    const vacc = series("topk1val_acc", 100);
+    const lr = series("learning_rate");
+    const tloss = series("train_loss");
+    const vloss = series("val_loss");
+    lineChart($("#tc-tacc"), { ...common, title: "Top-1 train accuracy", series: tacc, yMax: 100, yLabel: "%" });
+    lineChart($("#tc-vacc"), { ...common, title: "Top-1 val accuracy", series: vacc, yMax: 100, yLabel: "%" });
+    lineChart($("#tc-lr"), { ...common, title: "Learning rate", series: lr, yMax: niceMax(lr), yLabel: "lr" });
+    lineChart($("#tc-tloss"), { ...common, title: "Train loss", series: tloss, yMax: niceMax(tloss), yLabel: "loss" });
+    lineChart($("#tc-vloss"), { ...common, title: "Val loss", series: vloss, yMax: niceMax(vloss), yLabel: "loss" });
+  } catch (e) {
+    grid.innerHTML = `<div class="err">training charts failed to render: ${e.message}</div>`;
+  }
 }
 
 function redraw() {
