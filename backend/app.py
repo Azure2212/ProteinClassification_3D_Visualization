@@ -162,6 +162,15 @@ def api_run_training(run):
     return jsonify({"meta": results.run_meta(run), **t})
 
 
+@app.route("/api/run/<run>/realtest")
+def api_run_realtest(run):
+    """Per-epoch real-test top-k counts from realTestTracking.csv (may be absent)."""
+    rt = results.realtest_series(run)
+    if rt is None:
+        return jsonify({"error": "no realTestTracking.csv"}), 404
+    return jsonify({"meta": results.run_meta(run), **rt})
+
+
 # --- Part 3: table -----------------------------------------------------------
 @app.route("/api/part3")
 def api_part3():

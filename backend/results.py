@@ -408,6 +408,38 @@ def real_test_tracking(run):
     return {"columns": cols, "data": data}
 
 
+def realtest_series(run):
+    """Per-epoch real-test top-k counts from realTestTracking.csv, or None if the
+    file is absent. Columns are `top<k>` (k = 1,3,5,10,20,50,100). NaN/Inf -> null
+    so the JSON stays valid for the browser's strict parser.
+    """
+    p = _run_path(run, "realTestTracking.csv")
+    if not os.path.isfile(p):
+        return None
+    with open(p, newline="") as f:
+        reader = csv.DictReader(f)
+        cols = reader.fieldnames or []
+        kcols = [c for c in cols if re.match(r"^top\d+$", c)]
+        if not kcols:
+            return None
+        epochs, data = [], {c: [] for c in kcols}
+        for row in reader:
+            try:
+                epochs.append(int(float(row.get("epoch"))))
+            except (TypeError, ValueError):
+                continue
+            for c in kcols:
+                try:
+                    v = float(row.get(c))
+                    data[c].append(v if math.isfinite(v) else None)
+                except (TypeError, ValueError):
+                    data[c].append(None)
+    if not epochs:
+        return None
+    topk = sorted(int(c[3:]) for c in kcols)
+    return {"epochs": epochs, "series": data, "topk": topk}
+
+
 # --- Part 3 table ------------------------------------------------------------
 
 # Per-image metric column groups in ExactNSimilarityCheckResult.csv.

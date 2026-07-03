@@ -72,7 +72,7 @@ function renderRunList() {
 async function toggleRun(meta, on) {
   if (on) {
     const color = colorFor(colorIdx++);
-    const entry = { meta, curves: null, training: null, color };
+    const entry = { meta, curves: null, training: null, realtest: null, color };
     selected.set(meta.run, entry);
     await Promise.all([
       api.runCurves(meta.run)
@@ -81,6 +81,10 @@ async function toggleRun(meta, on) {
       api.runTraining(meta.run)
         .then((t) => { entry.training = t; })
         .catch((e) => { entry.trainingError = e.message || "no training data"; }),
+      // real-test tracking is optional (file may be absent) -> stays null, chart skipped
+      api.runRealtest(meta.run)
+        .then((rt) => { entry.realtest = rt; })
+        .catch(() => { entry.realtest = null; }),
     ]);
   } else {
     selected.delete(meta.run);
@@ -234,24 +238,36 @@ function drawTraining() {
       return mx <= 0 ? 1 : mx * 1.05;
     };
 
-    const common = { xLabels, showLabels: false, xAxisLabel: "epoch" };
     // Top-k accuracy columns available in trainingTracking.csv (no top-50).
     const availK = (runs[0].training && runs[0].training.topk) || [1, 3, 5, 10, 20];
+
+    // Real-test per epoch (realTestTracking.csv) — only runs that have the file.
+    const rtRuns = [...selected.values()].filter((s) => s.realtest && s.realtest.series);
+    const rtMaxLen = rtRuns.reduce((mx, s) => Math.max(mx, (s.realtest.epochs || []).length), 0);
+    const rtXLabels = Array.from({ length: rtMaxLen }, (_, i) => i + 1);
+    const rtAvailK = rtRuns.length ? (rtRuns[0].realtest.topk || []) : [];
+    const rtSeries = (k) => rtRuns.map((s) => {
+      const raw = Array.isArray(s.realtest.series["top" + k]) ? s.realtest.series["top" + k] : [];
+      return { label: runTag(s.meta), color: s.color, run: s.meta.run, values: padTo(raw.slice(), rtMaxLen) };
+    });
+
     const specs = [
       { acc: "train" },
       { acc: "val" },
-      { col: "learning_rate", title: "Learning rate", yLabel: "lr" },
+      ...(rtRuns.length ? [{ realtest: true }] : []),
       { col: "train_loss", title: "Train loss", yLabel: "loss" },
       { col: "val_loss", title: "Val loss", yLabel: "loss" },
+      { col: "learning_rate", title: "Learning rate", yLabel: "lr" },   // ALWAYS LAST
     ];
     grid.innerHTML = "";
     specs.forEach((sp) => {
       const wrap = document.createElement("div");
       wrap.className = "chart-zoom";
-      // accuracy charts get a Top-k dropdown, placed opposite the zoom buttons
-      const leftCtrl = sp.acc
-        ? `<div class="chart-ctrl-left"><select class="topk-sel" title="Top-k accuracy">` +
-            availK.map((k) => `<option value="${k}">Top-${k}</option>`).join("") +
+      // accuracy + real-test charts get a Top-k dropdown, opposite the zoom buttons
+      const kList = sp.acc ? availK : sp.realtest ? rtAvailK : null;
+      const leftCtrl = kList
+        ? `<div class="chart-ctrl-left"><select class="topk-sel" title="Top-k">` +
+            kList.map((k, i) => `<option value="${k}"${i === 0 ? " selected" : ""}>Top-${k}</option>`).join("") +
           `</select></div>`
         : "";
       wrap.innerHTML =
@@ -264,21 +280,24 @@ function drawTraining() {
       grid.appendChild(wrap);
       const chartEl = wrap.querySelector(".chart");
       const paint = () => {
-        let title, ser, yMax, yLabel;
+        let title, ser, yMax, yLabel, xl = xLabels;
         if (sp.acc) {
           const k = Number(wrap.querySelector(".topk-sel").value);
           title = `Top-${k} ${sp.acc} accuracy`;
           ser = series(`topk${k}${sp.acc}_acc`, 100);
           yMax = 100; yLabel = "%";
+        } else if (sp.realtest) {
+          const k = Number(wrap.querySelector(".topk-sel").value);
+          title = `Real test — top-${k} correct / epoch`;
+          ser = rtSeries(k); xl = rtXLabels; yLabel = "count"; yMax = niceMax(ser);
         } else {
-          title = sp.title; ser = series(sp.col); yLabel = sp.yLabel;
-          yMax = niceMax(ser);
+          title = sp.title; ser = series(sp.col); yLabel = sp.yLabel; yMax = niceMax(ser);
         }
-        lineChart(chartEl, { ...common, title, series: ser, yMax, yLabel });
+        lineChart(chartEl, { xLabels: xl, showLabels: false, xAxisLabel: "epoch", title, series: ser, yMax, yLabel });
         attachZoom(wrap, chartEl);   // re-attach (SVG replaced)
       };
       paint();
-      if (sp.acc) wrap.querySelector(".topk-sel").addEventListener("change", paint);
+      if (kList) wrap.querySelector(".topk-sel").addEventListener("change", paint);
     });
   } catch (e) {
     grid.innerHTML = `<div class="err">training charts failed to render: ${e.message}</div>`;
