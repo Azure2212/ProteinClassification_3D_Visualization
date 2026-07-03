@@ -193,6 +193,10 @@ function loadDefault() {
   ds.filters.forEach((filter) =>
     addPlayer({ type: "render", dataset: ds.key, filter, split, protein,
       label: renderLabel(ds.key, filter, split, protein) }));
+  // plus the professor's raw test-set images (origin_Version) for 7UZM,
+  // as a normal player layer alongside the rendered filters.
+  addPlayer({ type: "testset", version: "origin", protein,
+    label: `TEST·origin · ${protein}` });
 }
 
 async function addPlayer(spec) {
