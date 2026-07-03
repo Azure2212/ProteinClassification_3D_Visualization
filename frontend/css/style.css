@@ -157,6 +157,7 @@ button.danger:hover { border-color: var(--danger); color: #fca5a5; }
 .chart-tt .tt-lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #a9c2e0; }
 .chart-tt .tt-row b { color: #e6eefc; }
 .chart-tt .tt-near .tt-lbl, .chart-tt .tt-near b { color: #fff; font-weight: 700; }
+.tt-markers { pointer-events: none; }
 /* hover-highlight of a run's series across all Part 2 charts */
 .series-line, .series-dot, .pt-label { transition: opacity .12s, stroke-width .12s; }
 .series-dim { opacity: .12; }

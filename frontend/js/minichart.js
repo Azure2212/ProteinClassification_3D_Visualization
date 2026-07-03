@@ -113,6 +113,7 @@ export function lineChart(container, {
     }
   }
 
+  svg += `<g class="tt-markers"></g>`;   // hover highlight markers (drawn on top)
   svg += `</svg>`;
   container.innerHTML = svg;
 
@@ -174,8 +175,22 @@ function attachTooltip(svg, ctx) {
     if (y + tt.offsetHeight > window.innerHeight - 8) y = e.clientY - tt.offsetHeight - 14;
     tt.style.left = `${x}px`;
     tt.style.top = `${y}px`;
+
+    // highlight the data points at this epoch (constant on-screen size vs zoom)
+    const marks = svg.querySelector(".tt-markers");
+    if (marks) {
+      const sx = r.width / vb[2];                 // px per user x-unit (== y scale)
+      const rNear = 5.5 / sx, rOther = 3.8 / sx, sw = 1.6 / sx;
+      marks.innerHTML = rows.map((o) =>
+        `<circle cx="${ctx.xAt(bi)}" cy="${ctx.yAt(o.v)}" r="${o === near ? rNear : rOther}" ` +
+        `fill="${o.s.color}" stroke="#fff" stroke-width="${sw}"/>`).join("");
+    }
   });
-  svg.addEventListener("mouseleave", () => { tt.style.display = "none"; });
+  svg.addEventListener("mouseleave", () => {
+    tt.style.display = "none";
+    const marks = svg.querySelector(".tt-markers");
+    if (marks) marks.innerHTML = "";
+  });
 }
 
 // Vertical bar chart (Part 5). bars: [{label, value, color?, highlight?}].
