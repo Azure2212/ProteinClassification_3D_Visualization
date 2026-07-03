@@ -59,7 +59,8 @@ def list_filters(dataset):
             continue
         if name.startswith(prefix):
             out.append(name[len(prefix):])
-    # list every real render variant on disk (numeric filter first, then suffix)
+    # list every real render variant on disk except hidden ids (numeric first)
+    out = [f for f in out if f not in config.HIDDEN_FILTERS]
     return sorted(out, key=_filter_sort_key)
 
 

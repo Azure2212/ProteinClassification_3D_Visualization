@@ -231,6 +231,26 @@ def api_testset_images():
                     "count": len(images), "images": images})
 
 
+@app.route("/api/apix")
+def api_apix():
+    """Per-protein pixel spacing (Å) for the trueA own-apix variant, from
+    apix_12test.json. Returns {protein: apix}; {} if the file is absent."""
+    import json
+    path = config.APIX_12TEST_JSON
+    out = {}
+    if os.path.isfile(path):
+        try:
+            with open(path) as f:
+                raw = json.load(f)
+            for prot, v in raw.items():
+                apix = v.get("apix") if isinstance(v, dict) else v
+                if apix is not None:
+                    out[prot] = apix
+        except (json.JSONDecodeError, OSError):
+            out = {}
+    return jsonify({"apix": out})
+
+
 @app.route("/api/testset_download")
 def api_testset_download():
     """Zip ALL images of one test-set version, preserving the folder tree

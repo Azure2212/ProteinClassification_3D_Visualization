@@ -4,6 +4,7 @@
 import { api } from "./api.js";
 
 let META = null;
+let APIX = {};              // {protein: apix Å} for the trueA own-apix variant
 let playerSeq = 0;
 const players = new Map(); // id -> {timer, frames, idx, speed, playing, el}
 
@@ -17,6 +18,7 @@ function opt(v, label) {
 
 async function init() {
   META = await api.datasets();
+  try { APIX = (await api.apix()).apix || {}; } catch (e) { APIX = {}; }
   const dsSel = $("#p1-dataset");
   META.datasets.forEach((d) => dsSel.appendChild(opt(d.key, d.label)));
   dsSel.addEventListener("change", refreshFilters);
@@ -112,12 +114,25 @@ function currentDataset() {
 }
 
 // Friendly label for a render-variant id (value stays the raw folder id).
+const FILTER_LABELS = {
+  "filter12_amstrong_Applied": "filter12 amstrong (frame-fill)",
+  "filter12_trueA_12test": "filter12 trueA (ndzoom Python, apix=1.07) · 12 test only",
+  "filter12_trueA_ownApix_12test": "filter12 trueA (own apix per protein) · 12 test only",
+};
 function filterLabel(f) {
-  return f.replace(/_/g, " ")
-    .replace(/amstrong Applied/i, "amstrong (frame-fill)")
-    .replace(/trueA native/i, "trueA (native Å)")
-    .replace(/trueA ownApix/i, "trueA (own apix)")
-    .replace(/12test/i, "· 12 test only");
+  return FILTER_LABELS[f] || f.replace(/_/g, " ");
+}
+
+// Per-protein apix (Å) for the trueA own-apix variant.
+const OWNAPIX_FILTER = "filter12_trueA_ownApix_12test";
+
+// Card label: base + per-protein apix suffix for the own-apix trueA variant.
+function renderLabel(dataset, filter, split, protein) {
+  let s = `${dataset}·${filter}·${split} · ${protein}`;
+  if (filter === OWNAPIX_FILTER && APIX[protein] != null) {
+    s += ` · own apix = ${APIX[protein]} Å`;
+  }
+  return s;
 }
 
 function refreshFilters() {
@@ -168,7 +183,7 @@ function addFromForm() {
   filters.forEach((filter) =>
     proteins.forEach((protein) =>
       addPlayer({ type, dataset, filter, split, protein,
-        label: `${dataset}·${filter}·${split} · ${protein}` })));
+        label: renderLabel(dataset, filter, split, protein) })));
 }
 
 function loadDefault() {
@@ -177,7 +192,7 @@ function loadDefault() {
   const protein = "7UZM";
   ds.filters.forEach((filter) =>
     addPlayer({ type: "render", dataset: ds.key, filter, split, protein,
-      label: `${ds.key}·${filter}·${split} · ${protein}` }));
+      label: renderLabel(ds.key, filter, split, protein) }));
 }
 
 async function addPlayer(spec) {

@@ -148,7 +148,12 @@ SPLITS = {
     "test30": "PNG30_random",
 }
 
-# (Filter picker lists every real render variant found on disk — no whitelist.)
+# The filter picker lists every real render variant on disk EXCEPT these hidden ids.
+HIDDEN_FILTERS = {"filter12_trueA_native_12test"}
+
+# Per-protein pixel spacing (Å) for the trueA own-apix variant (read-only).
+APIX_12TEST_JSON = os.path.join(
+    DATASET_DIR, "3D_MAP_4885", "apix_12test.json")
 
 # Professor Su held-out real test set (the 12 real proteins, 193 images total).
 TESTSET_ROOT = "testingDataFromProfessorSu_v2_193"

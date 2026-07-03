@@ -28,6 +28,7 @@ export const api = {
   scripts: () => getJSON("/api/scripts"),
   script: (name, dir = "eman2") =>
     getJSON(`/api/script?name=${encodeURIComponent(name)}&dir=${encodeURIComponent(dir)}`),
+  apix: () => getJSON("/api/apix"),
   testsetImages: (protein, version = "origin") =>
     getJSON(`/api/testset_images?protein=${encodeURIComponent(protein)}&version=${version}`),
   predictRuns: () => getJSON("/api/predict_runs"),
