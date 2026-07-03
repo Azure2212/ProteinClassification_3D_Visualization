@@ -13,9 +13,18 @@ function esc(s) {
 // only those real lines are shown, keeping their original line numbers, with an
 // "omitted" separator between spans. Without ranges, the whole file is shown.
 function layout(content, ranges) {
-  const all = content.replace(/\n$/, "").split("\n");
+  const all = content.split("\n");
   if (!ranges || !ranges.length) {
-    return { gutter: all.map((_, n) => n + 1).join("\n"), body: esc(content) };
+    // Trim only the trailing run of blank (whitespace-only) lines — the EOF
+    // newline + any trailing blanks, which are not code. Interior blanks stay.
+    // Build gutter AND body from the SAME array so line numbers always align.
+    let n = all.length;
+    while (n > 0 && all[n - 1].trim() === "") n--;
+    const shown = all.slice(0, n);
+    return {
+      gutter: shown.map((_, i) => i + 1).join("\n"),
+      body: esc(shown.join("\n")),
+    };
   }
   const g = [], b = [];
   let prevEnd = null;
