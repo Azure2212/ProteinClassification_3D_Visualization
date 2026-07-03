@@ -129,6 +129,7 @@ button.danger:hover { border-color: var(--danger); color: #fca5a5; }
 .sticky-col { position: sticky; left: 0; background: var(--panel2); z-index: 1; text-align: left !important; }
 .grid-table thead .sticky-col { z-index: 3; }
 .total-row td, .total-row th { background: var(--panel); font-weight: 600; }
+.total-row .medal { font-size: 14px; }
 .grid-table .group-hd { background: var(--panel); font-weight: 600; color: var(--muted); }
 .caption .src { color: var(--muted); font-weight: 400; }
 small.warn { color: #fbbf24; font-weight: 600; }

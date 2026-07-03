@@ -112,10 +112,21 @@ async function load() {
     });
     html += `</tr>`;
   });
-  // totals row
+  // totals row — rank columns by their Total ratio and medal the top 3 (ties
+  // share a medal). Recomputed each render, so it tracks metric/top-k changes.
+  const ratioOf = (c) => (c.total_images ? c.total_correct / c.total_images : 0);
+  const distinct = [...new Set(data.columns.map(ratioOf))]
+    .filter((r) => r > 0).sort((a, b) => b - a);
+  const MEDALS = ["🥇", "🥈", "🥉"];
+  const medalFor = (c) => {
+    const i = distinct.indexOf(ratioOf(c));
+    return i >= 0 && i < MEDALS.length ? MEDALS[i] : "";
+  };
+
   html += `<tr class="total-row"><th class="sticky-col">Total</th>`;
   data.columns.forEach((c) => {
     const pct = c.total_images ? (100 * c.total_correct / c.total_images) : 0;
+    const medal = medalFor(c);
     let extra = "";
     if (c.mismatch) {
       extra = `<br><small class="warn" title="Source Excel states ` +
@@ -123,7 +134,8 @@ async function load() {
         `values shown are recovered from the corrupted date cells, not corrected.">` +
         `⚠ Excel states ${c.stated_correct}</small>`;
     }
-    html += `<td><b>${c.total_correct}/${c.total_images}</b>` +
+    html += `<td>${medal ? `<span class="medal" title="rank by Total ratio">${medal}</span> ` : ""}` +
+      `<b>${c.total_correct}/${c.total_images}</b>` +
       `<br><small>${pct.toFixed(1)}%</small>${extra}</td>`;
   });
   html += `</tr></tbody></table>`;
