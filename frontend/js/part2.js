@@ -13,6 +13,18 @@ let colorIdx = 0;
 const $ = (s, r = document) => r.querySelector(s);
 const runTag = (m) => [m.model, m.filter, m.smoothing].filter(Boolean).join("·");
 
+// Hover a selected run's row -> emphasize its line across ALL charts and dim the
+// others. `on=false` clears the highlight. Uses data-run tags set by lineChart.
+function highlightRun(run, on) {
+  const main = $(".p2-main");
+  if (!main) return;
+  main.querySelectorAll("[data-run]").forEach((el) => {
+    const isThis = el.getAttribute("data-run") === run;
+    el.classList.toggle("series-hl", on && isThis);
+    el.classList.toggle("series-dim", on && !isThis);
+  });
+}
+
 async function init() {
   const data = await api.runs();
   RUNS = data.runs;
@@ -47,6 +59,9 @@ function renderRunList() {
       e.preventDefault();
       openModal(r.run);
     });
+    // hover a SELECTED run -> highlight its line, dim the others
+    row.addEventListener("mouseenter", () => { if (selected.has(r.run)) highlightRun(r.run, true); });
+    row.addEventListener("mouseleave", () => { if (selected.has(r.run)) highlightRun(r.run, false); });
     box.appendChild(row);
   });
   const noData = RUNS.filter((r) => r.has_curves === false).length;
@@ -151,6 +166,7 @@ function drawTraining() {
       return {
         label: runTag(s.meta),
         color: s.color,
+        run: s.meta.run,
         values: padTo(raw.map((v) => (v == null ? null : v * scale)), maxLen),
       };
     });
@@ -204,7 +220,7 @@ function redraw() {
   const withCurves = [...selected.values()].filter((s) => s.curves);
   const ks = withCurves.length ? withCurves[0].curves.ks : [1, 3, 5, 10, 20, 50];
   const mk = (key) => withCurves.map((s) => ({
-    label: runTag(s.meta), color: s.color, values: s.curves[key],
+    label: runTag(s.meta), color: s.color, values: s.curves[key], run: s.meta.run,
   }));
   if (!withCurves.length) {
     $("#p2-chart-exact").innerHTML = `<div class="empty">select runs to plot</div>`;

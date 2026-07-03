@@ -72,15 +72,17 @@ export function lineChart(container, {
 
   // series (lines + points). null values (e.g. NaN loss epochs) are skipped so
   // the line spans the gap instead of diving to 0, and no dot is drawn there.
+  // Each element carries data-run (when provided) for hover-highlight.
   series.forEach((s) => {
+    const dr = s.run ? ` data-run="${esc(s.run)}"` : "";
     const pts = s.values
       .map((v, i) => (v == null ? null : `${xAt(i)},${yAt(v)}`))
       .filter(Boolean).join(" ");
-    svg += `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>`;
+    svg += `<polyline class="series-line"${dr} points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>`;
     s.values.forEach((v, i) => {
       if (v == null) return;
       const r = n > 30 ? 1.6 : 3;      // smaller dots on dense epoch charts
-      svg += `<circle cx="${xAt(i)}" cy="${yAt(v)}" r="${r}" fill="${s.color}">`
+      svg += `<circle class="series-dot"${dr} cx="${xAt(i)}" cy="${yAt(v)}" r="${r}" fill="${s.color}">`
         + `<title>${esc(s.label)} — ${esc(xAxisLabel)} ${xLabels[i]}: ${fmtValue(v, yLabel)}${isPct ? "%" : ""}</title></circle>`;
     });
   });
@@ -95,6 +97,7 @@ export function lineChart(container, {
         color: s.color,
         val: s.values[i],
         py: yAt(s.values[i]),
+        run: s.run,
       })).sort((a, b) => a.py - b.py);
       const GAP = 11;                 // min vertical spacing between labels
       let lastY = -Infinity;
@@ -103,7 +106,8 @@ export function lineChart(container, {
         if (ly < lastY + GAP) ly = lastY + GAP;   // push down if too close
         lastY = ly;
         const x = xAt(i);
-        svg += `<text x="${x}" y="${ly}" text-anchor="middle" class="pt-label" `
+        const dr = c.run ? ` data-run="${esc(c.run)}"` : "";
+        svg += `<text x="${x}" y="${ly}" text-anchor="middle" class="pt-label"${dr} `
           + `fill="${c.color}" stroke="#ffffff" stroke-width="2.6" paint-order="stroke">`
           + `${esc(fmtValue(c.val, yLabel))}</text>`;
       });

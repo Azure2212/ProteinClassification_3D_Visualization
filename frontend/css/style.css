@@ -131,6 +131,11 @@ button.danger:hover { border-color: var(--danger); color: #fca5a5; }
 .grid { stroke: var(--line); stroke-width: 1; }
 .tick { fill: var(--muted); font-size: 10px; }
 .pt-label { font-size: 9px; font-weight: 700; paint-order: stroke; }
+/* hover-highlight of a run's series across all Part 2 charts */
+.series-line, .series-dot, .pt-label { transition: opacity .12s, stroke-width .12s; }
+.series-dim { opacity: .12; }
+polyline.series-hl { stroke-width: 4; }
+circle.series-hl { r: 3.2; }
 .axis-label { fill: var(--muted); font-size: 11px; }
 .empty { color: var(--muted); font-size: 13px; }
 .legend { display: flex; flex-wrap: wrap; gap: 12px; }
