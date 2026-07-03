@@ -17,6 +17,13 @@ async function init() {
   const data = await api.runs();
   RUNS = data.runs;
   renderRunList();
+  // Default placeholder: auto-select the most recent run that has chart data
+  // (RUNS is newest-first) so charts show on load instead of an empty screen.
+  const def = RUNS.find((r) => r.has_curves !== false) || RUNS[0];
+  if (def) {
+    await toggleRun(def, true);   // fetches curves + training, then redraws
+    renderRunList();              // reflect the checked box in the list
+  }
 }
 
 function renderRunList() {
