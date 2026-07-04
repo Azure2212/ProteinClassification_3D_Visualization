@@ -68,7 +68,17 @@
       </div>
     </div>
 
-    <div id="p1-grid" class="grid"></div>
+    <!-- Section 1: EMAN2-generated rendered projections (type=render players) -->
+    <h3 class="viz-section-title">Generated from EMAN2 library
+      <small>— rendered projections from density maps / PDB via the EMAN2 pipeline</small></h3>
+    <div id="p1-grid-render" class="grid"></div>
+    <div id="p1-empty-render" class="grid-empty">No rendered layers — add one above (Source: Rendered).</div>
+
+    <!-- Section 2: real cryo-EM images from the professor (type=testset players) -->
+    <h3 class="viz-section-title">Real data from Professor
+      <small>— real cryo-EM images (testingDataFromProfessorSu_v2_193)</small></h3>
+    <div id="p1-grid-real" class="grid"></div>
+    <div id="p1-empty-real" class="grid-empty">No real-image layers — add one above (Source: Professor test-set).</div>
 
     <!-- Raw images from the professor (193 total) -->
     <div class="raw-section">
