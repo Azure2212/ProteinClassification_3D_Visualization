@@ -114,10 +114,11 @@ function currentDataset() {
 }
 
 // Friendly label for a render-variant id (value stays the raw folder id).
+// Only two Å variants are exposed now: frame-fill and the full-4885 TrueA
+// (filter12_trueA_native_Applied); the 12-test trueA subsets are hidden server-side.
 const FILTER_LABELS = {
-  "filter12_framefill_Applied": "filter12 framefill",
-  "filter12_trueA_12test": "filter12 trueA (ndzoom Python, apix=1.07) · 12 test only",
-  "filter12_trueA_ownApix_12test": "filter12 trueA (own apix per protein) · 12 test only",
+  "filter12_framefill_Applied": "frame-fill",
+  "filter12_trueA_native_Applied": "TrueA",
 };
 function filterLabel(f) {
   return FILTER_LABELS[f] || f.replace(/_/g, " ");

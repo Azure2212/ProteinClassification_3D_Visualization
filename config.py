@@ -148,8 +148,14 @@ SPLITS = {
     "test30": "PNG30_random",
 }
 
-# The filter picker lists every real render variant on disk EXCEPT these hidden ids.
-HIDDEN_FILTERS = {"filter12_trueA_native_12test"}
+# The filter picker lists every real render variant on disk EXCEPT these hidden
+# ids. Keep only the full-4885 trueA (filter12_trueA_native_Applied); hide the
+# 12-protein-only trueA subsets to avoid clutter.
+HIDDEN_FILTERS = {
+    "filter12_trueA_12test",
+    "filter12_trueA_native_12test",
+    "filter12_trueA_ownApix_12test",
+}
 
 # Per-protein pixel spacing (Å) for the trueA own-apix variant (read-only).
 APIX_12TEST_JSON = os.path.join(
