@@ -200,20 +200,9 @@ function loadDefault() {
     label: `TEST·origin · ${protein}` });
 }
 
-// route each layer to its section: testset -> "Real data from Professor",
-// render -> "Generated from EMAN2 library".
-function gridFor(spec) {
-  return $(spec.type === "testset" ? "#p1-grid-real" : "#p1-grid-render");
-}
-
-function refreshEmptyHints() {
-  $("#p1-empty-render").style.display = $("#p1-grid-render").children.length ? "none" : "";
-  $("#p1-empty-real").style.display = $("#p1-grid-real").children.length ? "none" : "";
-}
-
 async function addPlayer(spec) {
   const id = ++playerSeq;
-  const grid = gridFor(spec);
+  const grid = $("#p1-grid");
   const card = document.createElement("div");
   card.className = "player";
   card.innerHTML = `
@@ -231,7 +220,6 @@ async function addPlayer(spec) {
         value="${Number($("#p1-speed-all").value)}" title="Speed (ms/frame)">
     </div>`;
   grid.appendChild(card);
-  refreshEmptyHints();
 
   const p = { id, spec, frames: [], idx: 0,
     speed: Number($("#p1-speed-all").value), playing: true, timer: null, card };
@@ -326,12 +314,10 @@ function removePlayer(id) {
   stop(p);
   p.card.remove();
   players.delete(id);
-  refreshEmptyHints();
 }
 
 function clearAll() {
   [...players.keys()].forEach(removePlayer);
-  refreshEmptyHints();
 }
 
 export const Part1 = { init };

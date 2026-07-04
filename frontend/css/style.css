@@ -57,9 +57,6 @@ button.danger:hover { border-color: var(--danger); color: #fca5a5; }
 .caption { color: var(--muted); font-size: 12px; align-self: center; margin-left: auto; }
 
 /* Part 1 grid */
-.viz-section-title { margin: 18px 0 8px; font-size: 15px; letter-spacing: .02em; color: var(--accent-dark); border-bottom: 1px solid var(--line); padding-bottom: 6px; }
-.viz-section-title small { color: var(--muted); font-weight: 400; letter-spacing: 0; }
-.grid-empty { color: var(--muted); font-size: 13px; padding: 8px 2px 4px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 .player { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
 .player-head { display: flex; align-items: center; justify-content: space-between; padding: 7px 9px; background: var(--panel2); }
